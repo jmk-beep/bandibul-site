@@ -332,12 +332,13 @@ let ANN_BY_ID = {};
 
 function renderAnnouncements(groups) {
     ANN_BY_ID = {};
+    const staff = !!window.BDB_STAFF;
     Object.keys(ANN_TABS).forEach(function (cat) {
         const items = (groups && groups[cat]) || [];
         items.forEach(function (a) { ANN_BY_ID[a.id] = a; });
 
         const rows = items.length === 0
-            ? '<tr><td colspan="5" class="empty-announcement-message">현재 등록된 게시글이 없습니다.</td></tr>'
+            ? '<tr><td colspan="' + (staff ? 6 : 5) + '" class="empty-announcement-message">현재 등록된 게시글이 없습니다.</td></tr>'
             : items.map(function (a) {
                 return '<tr class="announcement-item' + (a.pinned ? ' pinned-row' : '') + '" data-id="' + esc(a.id) + '" data-title="' + esc(a.title) + '">'
                     + '<td data-label="번호">' + (a.pinned ? '<i class="fas fa-thumbtack pin-marker" title="상단 고정"></i>' : esc(a.displayNo)) + '</td>'
@@ -345,12 +346,15 @@ function renderAnnouncements(groups) {
                     + '<td data-label="제목" class="col-title">' + (a.pinned ? '<span class="badge-important">중요</span>' : '') + esc(a.title) + (a.isNew ? '<span class="badge-new">새소식</span>' : '') + '</td>'
                     + '<td data-label="게시일">' + esc(a.date) + '</td>'
                     + '<td data-label="첨부">' + (a.fileUrl ? '<a class="file-link" href="' + esc(a.fileUrl) + '" target="_blank" rel="noopener"><i class="fas fa-paperclip"></i></a>' : '-') + '</td>'
+                    + (staff ? '<td data-label="관리" class="col-manage">'
+                        + ((cat === '공지사항' || cat === '채용공고') ? '<button class="pin-icon-btn' + (a.pinned ? ' active' : '') + '" data-staff-action="pinAnn" data-id="' + esc(a.id) + '" title="' + (a.pinned ? '고정 해제' : '상단 고정') + '"><i class="fas fa-thumbtack"></i></button>' : '')
+                        + '<button class="delete-icon-btn" data-staff-action="delAnn" data-id="' + esc(a.id) + '" title="삭제"><i class="fas fa-trash"></i></button></td>' : '')
                     + '</tr>';
             }).join('');
 
         $(ANN_TABS[cat]).innerHTML =
             '<div class="announcement-table-container"><table class="announcement-table"><thead><tr>'
-            + '<th class="col-no">번호</th><th class="col-type">구분</th><th class="col-title">제목</th><th class="col-date">게시일</th><th class="col-file">첨부</th>'
+            + '<th class="col-no">번호</th><th class="col-type">구분</th><th class="col-title">제목</th><th class="col-date">게시일</th><th class="col-file">첨부</th>' + (staff ? '<th class="col-manage">관리</th>' : '')
             + '</tr></thead><tbody>' + rows + '</tbody></table></div>'
             + '<div class="pagination-controls" data-page-size="10" data-item-selector=".announcement-item"></div>';
     });
@@ -408,6 +412,7 @@ function storyTabId(i) { return i === 0 ? 'story-cat-all' : 'story-cat-' + (i - 
 
 function renderStories(d) {
     const groups = d.stories || {};
+    const staff = !!window.BDB_STAFF;
     const names = Object.keys(groups);          // '전체' + 카테고리들 (서버 순서)
     const detailOpen = $('story-detail-view').classList.contains('active');
     const prevActive = document.querySelector('#story-lists .intro-content.active');
@@ -431,6 +436,7 @@ function renderStories(d) {
                 ? '<p style="grid-column: 1 / -1; text-align:center; color: var(--text-muted); padding: 3rem 0;">현재 등록된 소식지가 없습니다.</p>'
                 : items.map(function (s) {
                     return '<div class="newsletter-card story-card-item" data-title="' + esc(s.title) + '" data-story-id="' + esc(s.id) + '">'
+                        + (staff ? '<button class="newsletter-delete-btn" data-staff-action="delStory" data-id="' + esc(s.id) + '" title="삭제"><i class="fas fa-trash"></i></button>' : '')
                         + (s.thumbnailUrl
                             ? '<img src="' + esc(s.thumbnailUrl) + '" alt="' + esc(s.title) + '" loading="lazy" style="width:100%; height:130px; object-fit:cover;">'
                             : '<div class="newsletter-cover"><i class="fas fa-book-open"></i></div>')
@@ -442,16 +448,18 @@ function renderStories(d) {
         }
 
         const rows = items.length === 0
-            ? '<tr><td colspan="4" class="empty-announcement-message">현재 등록된 글이 없습니다.</td></tr>'
+            ? '<tr><td colspan="' + (staff ? 5 : 4) + '" class="empty-announcement-message">현재 등록된 글이 없습니다.</td></tr>'
             : items.map(function (s, ri) {
                 return '<tr class="story-item" data-title="' + esc(s.title) + '" data-story-id="' + esc(s.id) + '">'
                     + '<td data-label="번호">' + (items.length - ri) + '</td>'
                     + '<td data-label="제목" class="col-title">' + esc(s.title) + badge(s) + '</td>'
                     + '<td data-label="게시일">' + esc(s.date) + '</td>'
-                    + '<td data-label="조회수">' + esc(s.views) + '</td></tr>';
+                    + '<td data-label="조회수">' + esc(s.views) + '</td>'
+                    + (staff ? '<td data-label="관리" class="col-manage"><button class="delete-icon-btn" data-staff-action="delStory" data-id="' + esc(s.id) + '" title="삭제"><i class="fas fa-trash"></i></button></td>' : '')
+                    + '</tr>';
             }).join('');
         return '<div id="' + tabId + '" class="intro-content"><div class="announcement-table-container"><table class="announcement-table"><thead><tr>'
-            + '<th class="col-no">번호</th><th class="col-title">제목</th><th class="col-date">게시일</th><th class="col-file">조회수</th>'
+            + '<th class="col-no">번호</th><th class="col-title">제목</th><th class="col-date">게시일</th><th class="col-file">조회수</th>' + (staff ? '<th class="col-manage">관리</th>' : '')
             + '</tr></thead><tbody>' + rows + '</tbody></table></div>'
             + '<div class="pagination-controls" data-page-size="10" data-item-selector=".story-item"></div></div>';
     }).join('');
@@ -497,6 +505,10 @@ function storyDetailHtml(d) {
                     + '<a href="' + esc(att.url) + '" rel="noopener"><span>' + esc(att.name || '첨부파일 다운로드') + '</span> <i class="fas fa-download"></i></a></div>';
             }).join('')
             + '</div>';
+    }
+
+    if (window.BDB_STAFF) {
+        h += '<div class="story-actions-row"><button class="btn-admin" data-staff-action="delStoryDetail" data-id="' + esc(s.id) + '" style="background-color: var(--secondary-color);"><i class="fas fa-trash"></i> 이 글 삭제</button></div>';
     }
 
     h += '<div class="story-prev-next">';
@@ -674,6 +686,7 @@ function changeCalendarMonth(diff) {
 }
 
 function openDayEventModal(ymd) {
+    window.selectedCalendarDate = ymd;
     $('dayEventModalTitle').textContent = ymd + ' 일정';
     const list = $('dayEventList');
     list.innerHTML = '';
@@ -687,10 +700,19 @@ function openDayEventModal(ymd) {
                 ? ' <span style="color:var(--text-muted); font-size:0.8rem;">(' + esc(ev.date) + ' ~ ' + esc(ev.endDate) + ')</span>' : '';
             const li = document.createElement('li');
             li.innerHTML = '<div><strong>' + esc(ev.title) + '</strong>' + range
-                + (ev.memo ? '<br><span style="color:var(--text-muted); font-size:0.85rem;">' + esc(ev.memo) + '</span>' : '') + '</div>';
+                + (ev.memo ? '<br><span style="color:var(--text-muted); font-size:0.85rem;">' + esc(ev.memo) + '</span>' : '') + '</div>'
+                + (window.BDB_STAFF ? '<button class="delete-icon-btn" data-staff-action="delCal" data-id="' + esc(ev.id) + '" title="삭제"><i class="fas fa-trash"></i></button>' : '');
             list.appendChild(li);
         });
     }
+    let area = $('dayEventStaffArea');
+    if (!area) {
+        area = document.createElement('div');
+        area.id = 'dayEventStaffArea';
+        list.after(area);
+    }
+    area.innerHTML = window.BDB_STAFF
+        ? '<button class="btn-admin" style="margin-top: 1rem;" data-staff-action="addCal"><i class="fas fa-plus"></i> 이 날짜에 일정 추가</button>' : '';
     openModal('dayEventModal');
 }
 
@@ -702,6 +724,7 @@ function dataSignature(d) {
 }
 
 function renderHome(d) {
+    window.LAST_HOME = d;
     renderAnnouncements(d.announcements);
     renderStories(d);
     CALENDAR_EVENTS = d.calendar || [];
@@ -743,6 +766,7 @@ function loadHome() {
 // ---------------------------------------------------------------------------
 document.addEventListener('click', function (e) {
     const t = e.target;
+    if (t.closest('[data-staff-action]')) return;   // 직원 기능 버튼은 staff.js 에서 처리
 
     const tabBtn = t.closest('.intro-nav .tab-button');
     if (tabBtn) {
