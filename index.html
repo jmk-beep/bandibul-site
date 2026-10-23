@@ -1,0 +1,469 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>반딧불단기보호센터</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<header>
+    <div class="nav-container">
+        <div class="header-left-section">
+            <div class="logo" onclick="scrollToHome()">
+                <img src="https://drive.google.com/thumbnail?id=1GLJbvcb245uUZamfGZShc_GTHErJapQ3&sz=w800" alt="반딧불단기보호센터 로고">
+                <span>반딧불단기보호센터</span>
+            </div>
+            <div class="header-meta-info">
+                <div class="datetime-info">
+                    <span id="current-time" class="current-time"></span>
+                    <span id="current-date" class="current-date"></span>
+                </div>
+                <div class="visitor-info">
+                    <div>Total: <span id="total-visitors">-</span></div>
+                    <div>Today: <span id="today-visitors">-</span></div>
+                </div>
+            </div>
+        </div>
+
+        <ul class="nav-links" id="navLinks" translate="no">
+            <li class="has-sub-menu">
+                <a href="#introduction" data-menu-target="기관소개">기관소개</a>
+                <ul class="sub-menu">
+                    <li><a href="#introduction" data-tab-id="greeting">인사말</a></li>
+                    <li><a href="#introduction" data-tab-id="mission">조직 미션</a></li>
+                    <li><a href="#introduction" data-tab-id="history">연혁</a></li>
+                    <li><a href="#introduction" data-tab-id="facility">시설 현황</a></li>
+                    <li><a href="#introduction" data-tab-id="organization">조직도</a></li>
+                    <li><a href="#introduction" data-tab-id="intake">입소안내</a></li>
+                    <li><a href="#introduction" data-tab-id="programs">프로그램</a></li>
+                    <li><a href="#introduction" data-tab-id="share">후원·자원봉사 안내</a></li>
+                </ul>
+            </li>
+            <li class="has-sub-menu">
+                <a href="#announcements" data-menu-target="알림마당">알림마당</a>
+                <ul class="sub-menu">
+                    <li><a href="#announcements" data-tab-id="announcements-all-tab">전체 공지</a></li>
+                    <li><a href="#announcements" data-tab-id="announcements-notice-tab">공지사항</a></li>
+                    <li><a href="#announcements" data-tab-id="announcements-recruit-tab">채용공고</a></li>
+                    <li><a href="#announcements" data-tab-id="announcements-calendar-tab">월별일정</a></li>
+                    <li><a href="#announcements" data-tab-id="announcements-menu-tab">식단표</a></li>
+                    <li><a href="#announcements" data-tab-id="announcements-activity-tab">활동계획</a></li>
+                </ul>
+            </li>
+            <li class="has-sub-menu">
+                <a href="#gallery" data-menu-target="반딧불이야기">반딧불이야기</a>
+                <ul class="sub-menu" id="story-submenu"></ul>
+            </li>
+        </ul>
+
+        <div class="hamburger-menu" id="hamburgerMenu">
+            <i class="fas fa-bars"></i>
+        </div>
+    </div>
+</header>
+
+<!-- 좌측 스크롤 위치 표시 -->
+<div class="side-dots" id="sideDots">
+    <button class="dot-item active" data-target="home" title="홈"></button>
+    <button class="dot-item" data-target="introduction" title="기관소개"></button>
+    <button class="dot-item" data-target="announcements" title="알림마당"></button>
+    <button class="dot-item" data-target="gallery" title="반딧불이야기"></button>
+</div>
+
+<!-- 우측 도구모음 -->
+<div class="side-toolbar-wrap">
+    <div class="side-toolbar-handle"><i class="fas fa-chevron-left"></i></div>
+    <div class="side-toolbar">
+        <button class="tool-donation" onclick="openSideLink(DONATION_FORM_URL)"><i class="fas fa-hand-holding-heart"></i>후원신청</button>
+        <button class="tool-volunteer" onclick="openSideLink(VOLUNTEER_FORM_URL)"><i class="fas fa-hands-helping"></i>봉사신청</button>
+        <button class="tool-appsheet" onclick="openSideLink(APPSHEET_URL)"><i class="fas fa-laptop-code"></i>AppSheet</button>
+        <button class="tool-intranet" onclick="openSideLink(INTRANET_URL)"><i class="fas fa-network-wired"></i>인트라넷</button>
+    </div>
+</div>
+
+<button class="back-to-top-btn" onclick="scrollToHome()" title="홈으로"><i class="fas fa-arrow-up"></i></button>
+
+<!-- Hero -->
+<section id="home" class="hero">
+    <video class="hero-video" id="heroVideo" autoplay muted loop playsinline preload="auto" poster="https://cdn.jsdelivr.net/gh/jmk-beep/bandibul-assets@main/homepageloading.mp4"></video>
+    <div class="hero-content"></div>
+</section>
+
+<!-- 기관소개 (정적 내용: 기존과 동일) -->
+<section id="introduction" class="section">
+    <div class="section-anchor" id="introduction-anchor"></div>
+    <h2 class="section-title">기관소개</h2>
+    <div class="intro-container">
+        <div class="intro-nav">
+            <button class="tab-button active" data-tab="greeting">인사말</button>
+            <button class="tab-button" data-tab="mission">조직 미션</button>
+            <button class="tab-button" data-tab="history">연혁</button>
+            <button class="tab-button" data-tab="facility">시설 현황</button>
+            <button class="tab-button" data-tab="organization">조직도</button>
+            <button class="tab-button" data-tab="intake">입소안내</button>
+            <button class="tab-button" data-tab="programs">프로그램</button>
+            <button class="tab-button" data-tab="share">후원·자원봉사 안내</button>
+        </div>
+        <div id="greeting" class="intro-content active">
+            <div class="greeting-flex">
+                <div class="greeting-photo">
+                    <img src="https://drive.google.com/thumbnail?id=10rcuqJd4pIgvDXf6sR7oDQfqYyXXObR5&sz=w1200" alt="반딧불단기보호센터 환영 현수막">
+                    <p class="photo-caption">반딧불단기보호센터 이용자 및 임직원 일동</p>
+                </div>
+                <div class="greeting-text">
+                    <h3>환영 메시지</h3>
+                    <p>반딧불단기보호센터는 장애인 단기거주시설로서, 갑작스러운 돌봄 공백이 생기거나 잠시 쉼이 필요한 순간 언제든 안심하고 머무를 수 있는 보금자리가 되어드립니다.</p>
+                    <p>이용자 한 분 한 분의 입장에서 원하는 삶을 살아갈 수 있도록 지원하며, 일상생활부터 심리적 안정, 사회적응까지 전 영역에서 최고의 서비스를 제공하기 위해 끊임없이 노력하고 있습니다.</p>
+                    <p>우리는 높은 전문성을 바탕으로, 이용자분들의 질적인 삶의 향상을 위해 오늘도 사랑과 정성을 다하고 있습니다. 작은 반딧불이 모여 큰 어둠을 밝히듯, 저희 임직원 모두는 여러분의 삶에 따뜻한 빛이 되겠습니다.</p>
+                    <div class="director-sign">
+                        반딧불단기보호센터 <strong> 임직원 일동 </strong>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div id="mission" class="intro-content">
+            <img src="https://drive.google.com/thumbnail?id=140i7csWvu701WewRZPdJnlMNbruYMq3S&sz=w2000" alt="반딧불단기보호센터 조직 미션">
+        </div>
+        <div id="history" class="intro-content">
+            <img src="https://drive.google.com/thumbnail?id=1m5_wIh0nab32aYc5dXT_BGllakGbdPIl&sz=w2000" alt="반딧불단기보호센터 연혁">
+        </div>
+        <div id="facility" class="intro-content">
+            <img src="https://drive.google.com/thumbnail?id=1zHHrYLmQXHSHPo8X3BfcEB3Y7R2MMhJl&sz=w2000" alt="반딧불단기보호센터 시설 현황">
+        </div>
+        <div id="organization" class="intro-content">
+            <img src="https://drive.google.com/thumbnail?id=1RTDxY-2FAvui3dK9usw6atfgTKX2mA9K&sz=w2000" alt="반딧불단기보호센터 조직도">
+        </div>
+        <div id="intake" class="intro-content">
+            <img src="https://drive.google.com/thumbnail?id=1dROB4FoqG7rNznMvfM8qUwWHUddj3TQT&sz=w2000" alt="반딧불단기보호센터 입소안내">
+        </div>
+        <div id="programs" class="intro-content">
+            <img src="https://drive.google.com/thumbnail?id=1InA-dZh9pCbZoiFpaInwU9aWZJ9Q7bmr&sz=w2000" alt="반딧불단기보호센터 프로그램">
+        </div>
+        <div id="share" class="intro-content">
+            <img src="https://drive.google.com/thumbnail?id=1c9QdkOPH4pSgFZOhkj15dbP0Cdf-7EcI&sz=w2000" alt="반딧불단기보호센터 후원·자원봉사 안내">
+        </div>
+    </div>
+</section>
+
+<!-- 알림마당 -->
+<section id="announcements" class="section">
+    <div class="section-anchor" id="announcements-anchor"></div>
+    <div class="section-header">
+        <h2 class="section-title">알림마당</h2>
+        <div class="section-header-actions">
+            <div class="search-box">
+                <i class="fas fa-search"></i>
+                <input type="text" id="announcement-search-input" placeholder="제목으로 검색" oninput="searchAnnouncements(this.value)">
+            </div>
+        </div>
+    </div>
+
+    <div class="intro-container">
+        <div class="intro-nav">
+            <button class="tab-button active" data-tab="announcements-all-tab">전체</button>
+            <button class="tab-button" data-tab="announcements-notice-tab">공지사항</button>
+            <button class="tab-button" data-tab="announcements-recruit-tab">채용공고</button>
+            <button class="tab-button" data-tab="announcements-calendar-tab">월별일정</button>
+            <button class="tab-button" data-tab="announcements-menu-tab">식단표</button>
+            <button class="tab-button" data-tab="announcements-activity-tab">활동계획</button>
+        </div>
+
+        <!-- 아래 5개 탭의 표는 app.js 가 데이터를 받아서 채웁니다 -->
+        <div id="announcements-all-tab" class="intro-content active"><p class="load-note" style="text-align:center;padding:3rem 0;">불러오는 중...</p></div>
+        <div id="announcements-notice-tab" class="intro-content"></div>
+        <div id="announcements-recruit-tab" class="intro-content"></div>
+        <div id="announcements-menu-tab" class="intro-content"></div>
+        <div id="announcements-activity-tab" class="intro-content"></div>
+
+        <div id="announcements-calendar-tab" class="intro-content">
+            <div class="calendar-wrap">
+                <div class="calendar-header">
+                    <button class="calendar-nav-btn" onclick="changeCalendarMonth(-1)"><i class="fas fa-chevron-left"></i></button>
+                    <div class="calendar-title" id="calendarTitle"></div>
+                    <button class="calendar-nav-btn" onclick="changeCalendarMonth(1)"><i class="fas fa-chevron-right"></i></button>
+                </div>
+                <div class="calendar-weekdays">
+                    <div>일</div><div>월</div><div>화</div><div>수</div><div>목</div><div>금</div><div>토</div>
+                </div>
+                <div class="calendar-grid" id="calendarGrid"></div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- 반딧불이야기 -->
+<section id="gallery" class="section">
+    <div class="section-anchor" id="gallery-anchor"></div>
+    <div class="section-header">
+        <h2 class="section-title">반딧불이야기</h2>
+        <div class="section-header-actions">
+            <div class="search-box">
+                <i class="fas fa-search"></i>
+                <input type="text" id="story-search-input" placeholder="제목으로 검색" oninput="searchStories(this.value)">
+            </div>
+        </div>
+    </div>
+
+    <div class="intro-container">
+        <div class="intro-nav" id="story-nav"></div>
+        <!-- display:contents 로 감싸서 기존 CSS 의 레이아웃(탭 + 내용)이 그대로 유지됩니다 -->
+        <div id="story-lists" style="display:contents;">
+            <div class="intro-content active"><p class="load-note" style="text-align:center;padding:3rem 0;">불러오는 중...</p></div>
+        </div>
+        <div id="story-detail-view" class="intro-content"></div>
+    </div>
+</section>
+     <footer>
+    <div class="footer-top">
+        <div class="footer-links">
+            <a href="#" onclick="openModal('privacy-modal'); return false;">개인정보처리방침</a>
+            <a href="#" onclick="openModal('terms-modal'); return false;">이용약관</a>
+            <a href="#" onclick="openModal('email-modal'); return false;">이메일무단수집거부</a>
+            <a href="#" onclick="openModal('map-modal'); return false;">찾아오시는 길</a>
+        </div>
+        <div class="footer-family-site">
+            <select id="family-site-select">
+        <option value="">관련 기관 선택</option>
+        <option value="https://www.chungnam.go.kr/main.do">충청남도</option>
+        <option value="https://www.cheonan.go.kr/kor.do">천안시</option>
+        <option value="https://www.mohw.go.kr/">보건복지부</option>
+        <option value="https://www.broso.or.kr/chungnam/mainPage.do">충남발달장애인지원센터</option>
+        <option value="http://www.cnaapd.org">충남권익옹호기관</option>
+        <option value="https://www.kawid.or.kr/">한국장애인복지시설협회</option>
+            </select>
+            <button onclick="goToFamilySite()" class="btn-go">이동</button>
+        </div>
+    </div>
+        <div class="footer-content">
+            <div class="footer-info">
+                <h4>반딧불단기보호센터</h4>
+                <p>주소: (31032) 충청남도 천안시 서북구 직산읍 군서2길 49</p>
+                <p>대표자: 김교식 | 고유번호증: 312-82-76511</p>
+                <p>Tel: 041-557-1256 | Fax: 041-557-5256 | Email: bandibul1256@nate.com</p>
+            </div>
+        </div>
+        <div class="footer-bottom">
+            <p>copyright &copy; 2026 반딧불단기보호센터. All rights reserved.</p>
+        </div>
+    </footer>
+
+<!-- --- 법적 고지 팝업 --- -->
+<div class="modal-backdrop" id="privacy-modal">
+    <div class="modal-content" style="max-width: 680px; width: 90%;">
+        <span class="close-button" onclick="closeModal('privacy-modal')">&times;</span>
+        <h3 style="margin: 0 0 0.8rem 0;">반딧불단기보호센터 개인정보처리방침</h3>
+
+        <div class="modal-body" style="white-space: normal; line-height: 1.5; max-height: 450px; overflow-y: auto;">
+            <p style="margin: 0 0 0.8rem 0; color: #555;">
+                반딧불단기보호센터(이하 "센터")는 「개인정보 보호법」 제30조에 따라 이용자의 개인정보를 보호하고 이와 관련한 고충을 신속하고 원활하게 처리할 수 있도록 다음과 같이 개인정보 처리방침을 수립·공개합니다.
+            </p>
+
+            <p style="margin: 0.9rem 0 0.3rem 0; font-weight: 700; color: black; font-size: 1.1rem;">제1조(개인정보의 처리 목적 및 수집 항목)</p>
+            <p style="margin: 0 0 0.4rem 0;">센터는 다음의 목적을 위해 최소한의 개인정보를 처리하며, 목적 이외의 용도로는 이용되지 않습니다.</p>
+            <ol style="margin: 0 0 0.6rem 0; padding-left: 1.2rem;">
+                <li><strong>서비스 이용 및 상담:</strong> 성명, 연락처, 이메일, 주소</li>
+                <li><strong>자원봉사자 관리 및 실적 등록:</strong> 성명, 생년월일, 연락처, 주소, VMS/1365 아이디</li>
+                <li><strong>후원자 관리 및 기부금영수증 발급:</strong> 성명, 연락처, 주소, 주민등록번호(영수증 발급용), 은행계좌정보</li>
+            </ol>
+
+            <p style="margin: 0.9rem 0 0.3rem 0; font-weight: 700; color: black; font-size: 1.1rem;">제2조(개인정보의 처리 및 보유 기간)</p>
+            <ol style="margin: 0 0 0.6rem 0; padding-left: 1.2rem;">
+                <li>웹사이트 문의 및 상담: 문의 처리 완료 후 1년</li>
+                <li>자원봉사자 정보: 자원봉사자 등록 해지 시 또는 봉사활동 종료 시까지</li>
+                <li>후원자 정보 및 결제 기록: 후원 탈퇴 시까지 (단, 기부금영수증 발급 명세 등 관련 법령에 따른 보관 의무는 5년)</li>
+            </ol>
+
+            <p style="margin: 0.9rem 0 0.3rem 0; font-weight: 700; color: black; font-size: 1.1rem;">제3조(개인정보의 제3자 제공)</p>
+            <p style="margin: 0 0 0.4rem 0;">센터는 원칙적으로 개인정보를 제3자에게 제공하지 않으나, 다음의 경우 법령에 따라 제한적으로 제공합니다.</p>
+            <ol style="margin: 0 0 0.6rem 0; padding-left: 1.2rem;">
+                <li><strong>자원봉사 실적 등록:</strong> 사회복지자원봉사인증관리(VMS) 및 1365자원봉사포털</li>
+                <li><strong>기부금영수증 발급:</strong> 국세청 홈택스</li>
+            </ol>
+
+            <p style="margin: 0.9rem 0 0.3rem 0; font-weight: 700; color: black; font-size: 1.1rem;">제4조(개인정보의 파기절차 및 방법)</p>
+            <ol style="margin: 0 0 0.6rem 0; padding-left: 1.2rem;">
+                <li>보유기간 경과 및 처리목적 달성 등 불필요하게 되었을 때에는 지체 없이 해당 개인정보를 파기합니다.</li>
+                <li>전자적 파일 형태는 복구할 수 없는 기술적 방법으로 삭제하며, 종이 문서에 기록된 개인정보는 분쇄하거나 소각합니다.</li>
+            </ol>
+
+            <p style="margin: 0.9rem 0 0.3rem 0; font-weight: 700; color: black; font-size: 1.1rem;">제5조(개인정보 보호책임자)</p>
+            <p style="margin: 0 0 0.6rem 0;">
+                - 책임자: 반딧불단기보호센터 과장<br>
+                - 전화번호: 041-557-1256<br>
+                - 이메일: bandibul1256@nate.com
+            </p>
+
+            <p style="margin: 0.9rem 0 0.3rem 0; font-weight: 700; color: black; font-size: 1.1rem;">제6조(개인정보 처리방침 변경)</p>
+            <p style="margin: 0 0 0.6rem 0;">본 개인정보 처리방침은 2026년 8월 28일부터 적용됩니다.</p>
+        </div>
+    </div>
+</div>
+
+<div class="modal-backdrop" id="terms-modal">
+    <div class="modal-content" style="max-width: 680px; width: 90%;">
+        <span class="close-button" onclick="closeModal('terms-modal')">&times;</span>
+        <h3 style="margin: 0 0 0.8rem 0;">반딧불단기보호센터 이용약관</h3>
+        <p style="margin: 0.9rem 0 0.3rem 0; font-weight: 700; color: black; font-size: 1.1rem;">제1조(목적)</p>
+        <div class="modal-body" style="white-space: normal; line-height: 1.5;">
+            <p style="margin: 0 0 0.6rem 0;">본 약관은 반딧불단기보호센터(이하 "센터")가 제공하는 웹사이트 서비스의 이용 조건과 절차, 센터와 홈페이지 방문자 간의 권리·의무 및 책임사항을 정함을 목적으로 합니다.</p>
+        <p style="margin: 0.9rem 0 0.3rem 0; font-weight: 700; color: black; font-size: 1.1rem;">제2조(홈페이지 방문자의 주의사항)</p>
+            <p style="margin: 0 0 0.6rem 0;">홈페이지를 찾아주신 모든 방문자는 관련 법과 안내사항을 지켜주셔야 하며, 센터의 웹사이트 운영을 방해하거나 다른 사람에게 피해를 주는 행위를 해서는 안 됩니다.</p>
+         <p style="margin: 0.9rem 0 0.3rem 0; font-weight: 700; color: black; font-size: 1.1rem;">제3조(저작권의 귀속 및 사용 제한)</p>
+         <ol style="margin: 0 0 0.6rem 0; padding-left: 1.2rem;">
+                <li>센터가 직접 작성하여 웹사이트에 올린 글, 사진, 소식지, 홍보자료 등의 모든 저작물에 대한 저작권은 센터에 있습니다.</li>
+                <li>방문자는 센터의 사전 허락 없이 웹사이트의 자료를 복제, 배포, 방송하거나 영리 목적으로 퍼가서 사용할 수 없습니다.</li>
+              </ol>
+        <p style="margin: 0.9rem 0 0.3rem 0; font-weight: 700; color: black; font-size: 1.1rem;">제4조(서비스 중단 및 손해배상)</p>
+         <ol style="margin: 0 0 0.6rem 0; padding-left: 1.2rem;">
+                <li>센터는 시스템 점검, 교체, 통신 장애 등 기술상 필요한 경우 웹사이트 서비스 제공을 일시적으로 중단할 수 있습니다.</li>
+                <li>방문자가 본 약관의 규정을 위반하여 센터에 손해를 입힌 경우, 해당 방문자는 그에 대한 손해를 배상할 책임을 집니다.</li>
+                 <li>천재지변이나 기타 불가항력적인 사유로 서비스를 제공할 수 없는 경우에는 센터의 책임이 면제됩니다.</li>
+            </ol>
+        </div>
+    </div>
+</div>
+
+<div class="modal-backdrop" id="email-modal">
+    <div class="modal-content" style="max-width: 680px; width: 90%;">
+        <span class="close-button" onclick="closeModal('email-modal')">&times;</span>
+        <h3 style="margin: 0 0 0.8rem 0;">이메일무단수집거부</h3>
+        <div class="modal-body" style="white-space: normal; line-height: 1.5;">
+            <p style="margin: 0 0 0.6rem 0;">본 웹사이트에 게시된 이메일 주소가 전자우편 수집 프로그램이나 그 밖의 기술적 장치를 이용하여 무단으로 수집되는 것을 거부합니다.</p>
+            <p style="margin: 0 0 0.6rem 0;">이를 위반할 시 「정보통신망 이용촉진 및 정보보호 등에 관한 법률」에 의해 형사처벌 대상이 될 수 있음을 유의하시기 바랍니다.</p>
+
+            <p style="margin: 0.6rem 0 0 0; color: var(--text-muted); font-size: 0.85rem;">
+                * 게시일자: 2026년 8월 28일<br>
+                * 관련 법률: 정보통신망법 제50조의 2 (전자우편주소의 무단 수집행위 등 금지)
+            </p>
+
+            <p style="margin: 0.9rem 0 0.3rem 0; font-weight: 700; color: var(--primary-color); font-size: 0.9rem;">[참고] 정보통신망법 제50조의 2</p>
+
+            <ol style="margin: 0; padding-left: 1.1rem; color: var(--text-muted); font-size: 0.85rem;">
+                <li>누구든지 전자우편주소의 수집을 거부하는 의사가 명시된 인터넷 홈페이지에서 자동으로 전자우편주소를 수집하는 프로그램 그 밖의 기술적 장치를 이용하여 전자우편주소를 수집하여서는 아니 된다.</li>
+                <li>누구든지 제1항의 규정을 위반하여 수집된 전자우편주소를 판매·유통하여서는 아니 된다.</li>
+                <li>누구든지 제1항 및 제2항의 규정에 의하여 수집·판매 및 유통이 금지된 전자우편주소임을 알고 이를 정보전송에 이용하여서는 아니 된다.</li>
+            </ol>
+        </div>
+    </div>
+</div>
+
+<div class="modal-backdrop" id="map-modal">
+    <div class="modal-content" style="max-width: 720px; width: 92%;">
+        <span class="close-button" onclick="closeModal('map-modal')">&times;</span>
+        <h3>찾아오시는 길</h3>
+        <div class="modal-body" style="white-space: normal;">
+            <div class="map-embed-wrap">
+    <iframe src="https://www.google.com/maps/embed?pb=!1m5!3m3!1m2!1s0x357b2f6402f37201%3A0x749fa0e3d65deb83!2z67CY65Sn67aI64uo6riw67O07Zi47IS87YSw!5e0!3m2!1sko!2skr!4v1787969138481!5m2!1sko!2skr" width="600" height="450" style="border:0;" allowfullscreen="" loading="lazy" referrerpolicy="strict-origin-when-cross-origin"></iframe>
+            </div>
+
+            <div class="direction-section">
+                <div class="direction-title"><i class="fas fa-car"></i> 자가용 이용 시</div>
+                <p class="direction-text">네비게이션에 <strong>반딧불단기보호센터</strong> 또는 <strong>충청남도 천안시 서북구 직산읍 군서2길 49</strong> 검색</p>
+            </div>
+
+            <div class="direction-section">
+                <div class="direction-title"><i class="fas fa-bus"></i> 대중교통 이용 시</div>
+                <ul class="direction-list">
+                    <li><span class="direction-label">버스 노선</span>군동2리 정류장 하차 (성환버스터미널 방면 101, 103, 105번 버스 이용)</li>
+                    <li><span class="direction-label">지하철 이용 시</span>1호선 직산역 하차 후 버스 환승 (123번) → 군동2리 정류장 하차</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 글 본문 이미지 확대보기 (반딧불이야기 상세 화면의 이미지를 클릭하면 뜹니다) -->
+<div class="modal-backdrop image-lightbox-backdrop" id="imageLightboxBackdrop">
+    <i class="fas fa-times image-lightbox-close" onclick="closeModal('imageLightboxBackdrop')"></i>
+    <div class="modal-content">
+        <img id="imageLightboxImg" src="" alt="확대 이미지">
+    </div>
+</div>
+
+<script>
+    function openModal(modalId) {
+        var el = document.getElementById(modalId);
+        if (el) el.classList.add('active');
+    }
+    function closeModal(modalId) {
+        var el = document.getElementById(modalId);
+        if (el) el.classList.remove('active');
+    }
+    // 글 본문 안의 이미지를 클릭하면 확대해서 보여줍니다. (반딧불이야기 상세
+    // 내용뿐 아니라, 알림마당 팝업 본문의 이미지, 첨부 이미지 미리보기도 포함됩니다.)
+    // 글 내용은 나중에 자바스크립트로 추가되는 경우도 있어서(AJAX로 끼워넣는
+    // 방식), 매번 이미지마다 클릭 이벤트를 붙이는 대신 document 전체에서
+    // 한 번만 감시합니다(이벤트 위임).
+    document.addEventListener('click', function (event) {
+    var img = event.target.closest && event.target.closest('.story-content-body img, .modal-body img, #modalImageTag');
+    if (img) {
+        document.getElementById('imageLightboxImg').src = img.src;
+        document.getElementById('imageLightboxBackdrop').classList.remove('zoomed'); // 새로 열 때는 항상 화면에 맞춘 크기부터 시작
+        openModal('imageLightboxBackdrop');
+    }
+});
+
+// 확대창 안의 이미지를 한 번 더 클릭하면 실제 크기(확대)로, 다시 클릭하면
+// 화면에 맞춘 크기로 돌아갑니다. (새 탭에서 이미지를 열었을 때와 같은 동작)
+document.addEventListener('click', function (event) {
+    if (event.target && event.target.id === 'imageLightboxImg') {
+        document.getElementById('imageLightboxBackdrop').classList.toggle('zoomed');
+    }
+});
+    document.addEventListener('click', function(event) {
+        if (event.target.classList.contains('modal-backdrop')) {
+            event.target.classList.remove('active');
+        }
+    });
+    document.addEventListener('keydown', function(event) {
+        if (event.key === 'Escape') {
+            document.querySelectorAll('.modal-backdrop.active').forEach(function(m) {
+                m.classList.remove('active');
+            });
+        }
+    });
+    function goToFamilySite() {
+        const select = document.getElementById('family-site-select');
+        const url = select.value;
+        if (url) {
+            window.open(url, '_blank');
+        } else {
+            alert('이동하실 관련 기관을 먼저 선택해 주세요.');
+        }
+    }
+</script>
+<!-- 알림 상세 팝업 -->
+<div id="announcementModal" class="modal-backdrop">
+    <div class="modal-content">
+        <i class="fas fa-times close-button"></i>
+        <h3 id="modalTitle"></h3>
+        <div id="modalBody" class="modal-body"></div>
+        <div id="modalImagePreview" style="display:none; margin-top: 1.2rem;">
+            <img id="modalImageTag" src="" alt="" style="max-width:100%; border-radius: 8px; box-shadow: var(--shadow-sm);">
+        </div>
+        <div id="modalAttachment" class="modal-attachment" style="display:none;">
+            <i class="fas fa-paperclip"></i>
+            <a id="modalAttachmentLink" href="#" target="_blank" rel="noopener">
+                <span id="modalAttachmentName"></span>
+                <i class="fas fa-download"></i>
+            </a>
+        </div>
+        <button class="btn btn-primary" id="modalConfirmBtn" style="width: 100%; margin-top: 2rem;">확인</button>
+    </div>
+</div>
+
+<!-- 일정 상세 팝업 -->
+<div id="dayEventModal" class="modal-backdrop">
+    <div class="modal-content">
+        <span class="close-button" onclick="closeModal('dayEventModal')">&times;</span>
+        <h3 id="dayEventModalTitle"></h3>
+        <ul class="calendar-event-list" id="dayEventList"></ul>
+    </div>
+</div>
+
+<script src="app.js"></script>
+</body>
+</html>
