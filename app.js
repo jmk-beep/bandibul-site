@@ -4,8 +4,9 @@
    글쓰기/삭제 등 직원 기능은 기존 Apps Script 주소의 화면에서 그대로 사용합니다.
    ========================================================================== */
 
-// ★ Apps Script 웹앱 주소 (배포 > 배포 관리에서 확인한 주소와 같은지 확인하세요)
-const EXEC_URL = 'https://script.google.com/macros/s/AKfycbxoiQxgO6abZVUrmndtal_szyAsTpK1a-mHarwYu7JisL1xWXNwT0pa5fN2zs1aNFTyPQ/exec';
+// ★ Apps Script 웹앱 주소는 index.html 의 <head> 안에 있습니다. (BDB_EXEC_URL)
+//   페이지가 열리자마자 데이터를 미리 요청하기 위해 그곳으로 옮겼습니다.
+const EXEC_URL = window.BDB_EXEC_URL;
 
 const HOME_CACHE_KEY = 'bdb_home_v1';
 
@@ -348,6 +349,7 @@ function renderAnnouncements(groups) {
                     + '<td data-label="첨부">' + (a.fileUrl ? '<a class="file-link" href="' + esc(a.fileUrl) + '" target="_blank" rel="noopener"><i class="fas fa-paperclip"></i></a>' : '-') + '</td>'
                     + (staff ? '<td data-label="관리" class="col-manage">'
                         + ((cat === '공지사항' || cat === '채용공고') ? '<button class="pin-icon-btn' + (a.pinned ? ' active' : '') + '" data-staff-action="pinAnn" data-id="' + esc(a.id) + '" title="' + (a.pinned ? '고정 해제' : '상단 고정') + '"><i class="fas fa-thumbtack"></i></button>' : '')
+                        + '<button class="edit-icon-btn" data-staff-action="editAnn" data-id="' + esc(a.id) + '" title="수정"><i class="fas fa-pen"></i></button>'
                         + '<button class="delete-icon-btn" data-staff-action="delAnn" data-id="' + esc(a.id) + '" title="삭제"><i class="fas fa-trash"></i></button></td>' : '')
                     + '</tr>';
             }).join('');
@@ -436,7 +438,8 @@ function renderStories(d) {
                 ? '<p style="grid-column: 1 / -1; text-align:center; color: var(--text-muted); padding: 3rem 0;">현재 등록된 소식지가 없습니다.</p>'
                 : items.map(function (s) {
                     return '<div class="newsletter-card story-card-item" data-title="' + esc(s.title) + '" data-story-id="' + esc(s.id) + '">'
-                        + (staff ? '<button class="newsletter-delete-btn" data-staff-action="delStory" data-id="' + esc(s.id) + '" title="삭제"><i class="fas fa-trash"></i></button>' : '')
+                        + (staff ? '<button class="newsletter-edit-btn" data-staff-action="editStory" data-id="' + esc(s.id) + '" title="수정"><i class="fas fa-pen"></i></button>'
+                            + '<button class="newsletter-delete-btn" data-staff-action="delStory" data-id="' + esc(s.id) + '" title="삭제"><i class="fas fa-trash"></i></button>' : '')
                         + (s.thumbnailUrl
                             ? '<img src="' + esc(s.thumbnailUrl) + '" alt="' + esc(s.title) + '" loading="lazy" style="width:100%; height:130px; object-fit:cover;">'
                             : '<div class="newsletter-cover"><i class="fas fa-book-open"></i></div>')
@@ -455,7 +458,7 @@ function renderStories(d) {
                     + '<td data-label="제목" class="col-title">' + esc(s.title) + badge(s) + '</td>'
                     + '<td data-label="게시일">' + esc(s.date) + '</td>'
                     + '<td data-label="조회수">' + esc(s.views) + '</td>'
-                    + (staff ? '<td data-label="관리" class="col-manage"><button class="delete-icon-btn" data-staff-action="delStory" data-id="' + esc(s.id) + '" title="삭제"><i class="fas fa-trash"></i></button></td>' : '')
+                    + (staff ? '<td data-label="관리" class="col-manage"><button class="edit-icon-btn" data-staff-action="editStory" data-id="' + esc(s.id) + '" title="수정"><i class="fas fa-pen"></i></button><button class="delete-icon-btn" data-staff-action="delStory" data-id="' + esc(s.id) + '" title="삭제"><i class="fas fa-trash"></i></button></td>' : '')
                     + '</tr>';
             }).join('');
         return '<div id="' + tabId + '" class="intro-content"><div class="announcement-table-container"><table class="announcement-table"><thead><tr>'
@@ -508,7 +511,8 @@ function storyDetailHtml(d) {
     }
 
     if (window.BDB_STAFF) {
-        h += '<div class="story-actions-row"><button class="btn-admin" data-staff-action="delStoryDetail" data-id="' + esc(s.id) + '" style="background-color: var(--secondary-color);"><i class="fas fa-trash"></i> 이 글 삭제</button></div>';
+        h += '<div class="story-actions-row"><button class="btn-admin" data-staff-action="editStory" data-id="' + esc(s.id) + '"><i class="fas fa-pen"></i> 이 글 수정</button>'
+            + '<button class="btn-admin" data-staff-action="delStoryDetail" data-id="' + esc(s.id) + '" style="background-color: var(--secondary-color);"><i class="fas fa-trash"></i> 이 글 삭제</button></div>';
     }
 
     h += '<div class="story-prev-next">';
@@ -544,17 +548,50 @@ function openStoryFromList(id) {
     openStoryDetail(id);
 }
 
+// 한 번 열어본 글은 기억해 두었다가, 다시 열 때 서버를 거치지 않고 바로 보여줍니다.
+// (글을 수정/삭제하거나 목록을 새로 받아오면 비웁니다)
+let STORY_DETAIL_CACHE = {};
+function clearStoryDetailCache() { STORY_DETAIL_CACHE = {}; }
+
+// 목록에 이미 있는 정보(제목/카테고리/날짜)로 머리 부분을 먼저 그려 둡니다.
+function findStoryLite(id) {
+    const groups = (window.LAST_HOME && window.LAST_HOME.stories) || {};
+    const all = groups['전체'] || [];
+    for (let i = 0; i < all.length; i++) if (all[i].id === id) return all[i];
+    return null;
+}
+
+function storyLoadingHtml(id) {
+    const s = findStoryLite(id);
+    const loading = '<p style="text-align:center; color:var(--text-muted); padding:3rem 0;"><i class="fas fa-spinner fa-spin"></i> 본문을 불러오는 중...</p>';
+    if (!s) return '<div style="padding:1rem 0;">' + loading + '</div>';
+    return '<div class="story-page-wrap"><div class="story-main">'
+        + '<a href="#gallery" class="story-detail-back-link"><i class="fas fa-arrow-left"></i> 반딧불이야기 목록으로</a>'
+        + '<span class="story-category-badge">' + esc(s.category) + '</span>'
+        + '<h1 class="story-title">' + esc(s.title) + '</h1>'
+        + '<div class="story-meta"><span><i class="fas fa-calendar"></i> ' + esc(s.date) + '</span></div>'
+        + loading + '</div></div>';
+}
+
 function openStoryDetail(id, opts) {
     opts = opts || {};
     const panel = $('story-detail-view');
-    panel.innerHTML = '<p style="text-align:center; color:var(--text-muted); padding:4rem 0;">불러오는 중...</p>';
+    panel.dataset.storyId = id;
+    const cached = STORY_DETAIL_CACHE[id];
+    panel.innerHTML = cached ? storyDetailHtml(cached) : storyLoadingHtml(id);
     activateTab('gallery', 'story-detail-view', !opts.noScroll);
 
-    apiGet('story', { id: id })
-        .then(function (d) { panel.innerHTML = storyDetailHtml(d); })
-        .catch(function (err) {
-            panel.innerHTML = '<p style="text-align:center; color:var(--text-muted); padding:3rem 0;">글을 불러오지 못했습니다: ' + esc(err.message) + '</p>';
-        });
+    if (!cached) {
+        apiGet('story', { id: id })
+            .then(function (d) {
+                STORY_DETAIL_CACHE[id] = d;
+                if (panel.dataset.storyId === id) panel.innerHTML = storyDetailHtml(d);
+            })
+            .catch(function (err) {
+                if (panel.dataset.storyId !== id) return;
+                panel.innerHTML = '<p style="text-align:center; color:var(--text-muted); padding:3rem 0;">글을 불러오지 못했습니다: ' + esc(err.message) + '</p>';
+            });
+    }
 
     const url = location.pathname + '?story=' + encodeURIComponent(id);
     if (opts.replace) {
@@ -749,7 +786,15 @@ function loadHome() {
         try { renderHome(cached); shownSig = dataSignature(cached); } catch (e) { shownSig = null; }
     }
 
-    apiGet('home').then(function (data) {
+    const homeRequest = window.BDB_HOME_PROMISE
+        ? window.BDB_HOME_PROMISE.then(function (j) {
+            if (!j || !j.ok) throw new Error((j && j.error) || '요청 처리 중 오류가 발생했습니다.');
+            return j.data;
+        }).catch(function () { return apiGet('home'); })   // 미리 받기에 실패하면 한 번 더 시도
+        : apiGet('home');
+    window.BDB_HOME_PROMISE = null;
+
+    homeRequest.then(function (data) {
         try { localStorage.setItem(HOME_CACHE_KEY, JSON.stringify(data)); } catch (e) { /* 저장 실패는 무시 */ }
         showVisitors(data.visitors);
         if (dataSignature(data) !== shownSig) renderHome(data);

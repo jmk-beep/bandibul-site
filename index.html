@@ -4,6 +4,19 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>반딧불단기보호센터</title>
+    <!-- 데이터 서버(Apps Script)와 미리 연결해 두어 첫 응답을 빠르게 받습니다. -->
+    <link rel="preconnect" href="https://script.google.com" crossorigin>
+    <link rel="preconnect" href="https://script.googleusercontent.com" crossorigin>
+    <script>
+        // ★ Apps Script 웹앱 주소 (배포 > 배포 관리에서 확인한 주소와 같은지 확인하세요)
+        window.BDB_EXEC_URL = 'https://script.google.com/macros/s/AKfycbxoiQxgO6abZVUrmndtal_szyAsTpK1a-mHarwYu7JisL1xWXNwT0pa5fN2zs1aNFTyPQ/exec';
+        // 화면의 나머지 부분을 읽는 동안 메인 데이터를 미리 요청해 둡니다. (app.js 가 이어받아 사용)
+        try {
+            window.BDB_HOME_PROMISE = fetch(window.BDB_EXEC_URL + '?action=home')
+                .then(function (r) { return r.json(); });
+            window.BDB_HOME_PROMISE.catch(function () { /* app.js 에서 다시 시도합니다 */ });
+        } catch (e) { window.BDB_HOME_PROMISE = null; }
+    </script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="style.css">
 </head>
@@ -88,7 +101,7 @@
 
 <!-- Hero -->
 <section id="home" class="hero">
-    <video class="hero-video" id="heroVideo" autoplay muted loop playsinline preload="auto" poster="https://cdn.jsdelivr.net/gh/jmk-beep/bandibul-assets@main/homepageloading.mp4"></video>
+    <video class="hero-video" id="heroVideo" autoplay muted loop playsinline preload="auto"></video>
     <div class="hero-content"></div>
 </section>
 
