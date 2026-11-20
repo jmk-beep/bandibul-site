@@ -1,5 +1,5 @@
 /* ==========================================================================
-   직원 기능: 로그인(Firebase + 구글) / 글쓰기 / 삭제 / 상단 고정 / 일정 관리
+   직원 기능: 로그인(Firebase + 구글) / 글쓰기 / 수정 / 삭제 / 상단 고정 / 일정 관리
    - @littlelight.or.kr 계정만 직원으로 인정합니다.
    - 실제 권한 확인은 Apps Script(서버)에서 합니다. 이 파일의 확인은 화면 표시용입니다.
    ========================================================================== */
@@ -36,11 +36,16 @@ const MODALS_HTML = `
 <div id="addAnnouncementModal" class="modal-backdrop">
   <div class="modal-content modal-content-lg">
     <span class="close-button" onclick="closeModal('addAnnouncementModal')">&times;</span>
-    <h3>새 공지 작성</h3>
+    <h3 id="ann-modal-title">새 공지 작성</h3>
     <div class="admin-form-group"><label for="ann-category">구분</label><select id="ann-category"></select></div>
     <div class="admin-form-group"><label for="ann-title">제목</label><input type="text" id="ann-title" placeholder="제목을 입력하세요"></div>
     <div class="admin-form-group"><label for="ann-content">내용</label>
       <div id="ann-content" class="rich-content-editor" contenteditable="true" data-placeholder="내용을 입력하세요. 이미지를 복사한 뒤 이 안에서 Ctrl+V(붙여넣기) 하면 바로 삽입됩니다. 삽입된 이미지를 클릭하면 크기를 조절할 수 있습니다."></div></div>
+    <div class="admin-form-group edit-only" id="ann-current-file-box">
+      <label>현재 첨부파일</label>
+      <ul class="existing-file-list"><li><span id="ann-current-file-name"></span><button type="button" id="ann-remove-file-btn" onclick="toggleAnnRemoveFile()">삭제</button></li></ul>
+      <p class="admin-form-hint">아래에서 새 파일을 선택하면 기존 파일 대신 새 파일로 바뀝니다.</p>
+    </div>
     <div class="admin-form-group"><label for="ann-file">첨부파일 (선택, 다운로드용 - 한글/PDF 등)</label><input type="file" id="ann-file"></div>
     <button class="btn btn-primary" id="ann-submit-btn" style="width:100%;" onclick="submitAnnouncement()">등록</button>
   </div>
@@ -49,18 +54,31 @@ const MODALS_HTML = `
 <div id="addStoryModal" class="modal-backdrop">
   <div class="modal-content modal-content-lg">
     <span class="close-button" onclick="closeModal('addStoryModal')">&times;</span>
-    <h3>반딧불이야기 - 새 글 작성</h3>
+    <h3 id="story-modal-title">반딧불이야기 - 새 글 작성</h3>
     <div class="admin-form-group"><label for="story-category">카테고리</label><select id="story-category" onchange="onStoryCategoryChange()"></select></div>
     <div class="admin-form-group"><label for="story-title">제목</label><input type="text" id="story-title" placeholder="제목을 입력하세요"></div>
     <div class="admin-form-group" id="story-thumbnail-group" style="display:none;">
+      <div class="admin-form-group edit-only" id="story-current-pdf-box">
+        <label>현재 소식지 PDF</label>
+        <ul class="existing-file-list"><li><span id="story-current-pdf-name">등록된 PDF</span><button type="button" id="story-remove-pdf-btn" onclick="toggleStoryRemovePdf()">삭제</button></li></ul>
+        <p class="admin-form-hint">아래에서 새 PDF를 올리거나 링크를 넣으면 기존 PDF 대신 새 것으로 바뀝니다.</p>
+      </div>
       <label>소식지 PDF (선택 - 둘 중 하나만 입력하면 됩니다)</label>
       <div class="admin-form-group" style="margin-bottom:0.6rem;"><label for="story-pdf-file" style="font-weight:400; font-size:0.88rem;">① PDF 파일 직접 업로드</label><input type="file" id="story-pdf-file" accept="application/pdf"></div>
       <div class="admin-form-group" style="margin-bottom:0.6rem;"><label for="story-pdf-driveurl" style="font-weight:400; font-size:0.88rem;">② 또는 구글 드라이브 링크 붙여넣기</label><input type="url" id="story-pdf-driveurl" placeholder="https://drive.google.com/file/d/....">
         <p class="admin-form-hint">드라이브에 PDF를 올린 뒤 "링크가 있는 모든 사용자" 보기 권한으로 공유하고, 그 링크를 붙여넣어주세요.</p></div>
+      <div class="admin-form-group edit-only" id="story-current-thumb-box">
+        <label style="font-weight:400; font-size:0.88rem;">현재 커스텀 표지 이미지</label>
+        <ul class="existing-file-list"><li><span>직접 올린 표지 이미지</span><button type="button" id="story-remove-thumb-btn" onclick="toggleStoryRemoveThumb()">삭제</button></li></ul>
+      </div>
       <div class="admin-form-group"><label for="story-thumbnail" style="font-weight:400; font-size:0.88rem;">커스텀 표지 이미지 (선택 - 비워두면 PDF 첫 페이지가 자동으로 표지가 됩니다)</label><input type="file" id="story-thumbnail" accept="image/*"></div>
     </div>
     <div class="admin-form-group"><label for="story-content">내용</label>
       <div id="story-content" class="rich-content-editor" contenteditable="true" data-placeholder="내용을 입력하세요. 이미지를 복사한 뒤 이 안에서 Ctrl+V(붙여넣기) 하면 바로 삽입됩니다. 삽입된 이미지는 드래그해서 위치를 옮기거나 클릭해서 크기를 조절할 수 있습니다."></div></div>
+    <div class="admin-form-group edit-only" id="story-existing-att-box">
+      <label>현재 첨부파일</label>
+      <ul class="existing-file-list" id="story-existing-att-list"></ul>
+    </div>
     <div class="admin-form-group"><label for="story-file">첨부파일 (선택 - 여러 개 선택 가능)</label>
       <input type="file" id="story-file" multiple onchange="handleStoryFileInputChange(event)">
       <p class="admin-form-hint" id="story-attachment-status"></p>
@@ -173,6 +191,7 @@ async function staffApi(action, args) {
 }
 
 async function refreshHome() {
+    if (typeof clearStoryDetailCache === 'function') clearStoryDetailCache();
     const data = await apiGet('home', { silent: '1' });
     try { localStorage.setItem(HOME_CACHE_KEY, JSON.stringify(data)); } catch (e) { /* 무시 */ }
     renderHome(data);
@@ -221,6 +240,12 @@ document.addEventListener('click', function (e) {
     switch (b.dataset.staffAction) {
         case 'pinAnn':
             runAction('처리 중입니다...', function () { return staffApi('toggleAnnouncementPinned', [id]); });
+            break;
+        case 'editAnn':
+            window.openEditAnnouncementModal(id);
+            break;
+        case 'editStory':
+            window.openEditStoryModal(id);
             break;
         case 'delAnn':
             if (confirm('이 공지사항을 삭제하시겠습니까?')) {
@@ -365,11 +390,51 @@ function setupImageResize(editor) {
 // ---------------------------------------------------------------------------
 // 공지 작성
 // ---------------------------------------------------------------------------
+let annEditingId = null;      // 수정 중인 공지 id (새 글 작성이면 null)
+let annRemoveFile = false;    // 수정 시 기존 첨부파일 삭제 여부
+
+function setAnnEditMode(editing) {
+    $('addAnnouncementModal').querySelector('.modal-content').classList.toggle('is-editing', editing);
+    $('ann-modal-title').textContent = editing ? '공지 수정' : '새 공지 작성';
+    $('ann-submit-btn').textContent = editing ? '수정 완료' : '등록';
+}
+
 window.openAddAnnouncementModal = function () {
+    annEditingId = null;
+    annRemoveFile = false;
+    setAnnEditMode(false);
     $('ann-title').value = '';
     $('ann-content').innerHTML = '';
     $('ann-file').value = '';
     openModal('addAnnouncementModal');
+};
+
+window.openEditAnnouncementModal = function (id) {
+    const a = ANN_BY_ID[id];
+    if (!a) { alert('글 정보를 찾을 수 없습니다. 새로고침 후 다시 시도해주세요.'); return; }
+    annEditingId = id;
+    annRemoveFile = false;
+    setAnnEditMode(true);
+    $('ann-category').value = a.category;
+    $('ann-title').value = a.title || '';
+    $('ann-content').innerHTML = a.content || '';
+    $('ann-file').value = '';
+    $('ann-current-file-box').style.display = a.fileUrl ? '' : 'none';
+    $('ann-current-file-name').textContent = a.fileName || '첨부파일';
+    updateRemoveToggle('ann-remove-file-btn', false);
+    openModal('addAnnouncementModal');
+};
+
+// 기존 파일 "삭제" 버튼: 누르면 삭제 예정(취소선), 다시 누르면 취소
+function updateRemoveToggle(btnId, removed) {
+    const btn = $(btnId);
+    if (!btn) return;
+    btn.textContent = removed ? '삭제 취소' : '삭제';
+    btn.closest('li').classList.toggle('removed', removed);
+}
+window.toggleAnnRemoveFile = function () {
+    annRemoveFile = !annRemoveFile;
+    updateRemoveToggle('ann-remove-file-btn', annRemoveFile);
 };
 
 window.submitAnnouncement = function () {
@@ -381,22 +446,29 @@ window.submitAnnouncement = function () {
     if (!title) { alert('제목을 입력해주세요.'); return; }
     if (editor.querySelector('.image-upload-placeholder')) { alert('이미지 업로드가 아직 진행 중입니다. 잠시 후 다시 시도해주세요.'); return; }
 
-    setBtnLoading('ann-submit-btn', true, '등록');
-    showLoadingOverlay('공지사항을 게시하는 중입니다...');
+    const editingId = annEditingId;
+    const label = editingId ? '수정 완료' : '등록';
+    setBtnLoading('ann-submit-btn', true, label);
+    showLoadingOverlay(editingId ? '공지사항을 수정하는 중입니다...' : '공지사항을 게시하는 중입니다...');
 
     readFileAsDataURL($('ann-file')).then(function (fileData) {
         const payload = { category: category, title: title, content: content };
         if (fileData) { payload.fileBase64 = fileData.dataUrl; payload.fileName = fileData.name; }
+        if (editingId) {
+            payload.id = editingId;
+            payload.removeFile = annRemoveFile;
+            return staffApi('updateAnnouncement', [payload]);
+        }
         return staffApi('addAnnouncement', [payload]);
     }).then(function () {
         closeModal('addAnnouncementModal');
         return refreshHome();
     }).then(function () {
-        alert('공지사항이 등록되었습니다.');
+        alert(editingId ? '공지사항이 수정되었습니다.' : '공지사항이 등록되었습니다.');
     }).catch(function (err) {
-        alert('등록 중 오류가 발생했습니다: ' + err.message);
+        alert((editingId ? '수정' : '등록') + ' 중 오류가 발생했습니다: ' + err.message);
     }).then(function () {
-        setBtnLoading('ann-submit-btn', false, '등록');
+        setBtnLoading('ann-submit-btn', false, label);
         hideLoadingOverlay();
     });
 };
@@ -430,13 +502,47 @@ window.handleStoryFileInputChange = function (e) {
     updateStoryAttachmentStatus();
 };
 
-window.openAddStoryModal = function () {
-    if (!window.LAST_HOME) { alert('데이터를 불러온 뒤에 다시 시도해주세요.'); return; }
-    const sel = $('story-category');
-    sel.innerHTML = Object.keys(window.LAST_HOME.stories || {}).filter(function (n) { return n !== '전체'; }).map(function (n) {
+let storyEditingId = null;       // 수정 중인 글 id (새 글 작성이면 null)
+let storyExistingAttachments = []; // 수정 시 기존 첨부파일 [{url, name, removed}]
+let storyRemovePdf = false;
+let storyRemoveThumb = false;
+
+function setStoryEditMode(editing) {
+    $('addStoryModal').querySelector('.modal-content').classList.toggle('is-editing', editing);
+    $('story-modal-title').textContent = editing ? '반딧불이야기 - 글 수정' : '반딧불이야기 - 새 글 작성';
+    $('story-submit-btn').textContent = editing ? '수정 완료' : '등록';
+}
+
+function renderStoryExistingAttachments() {
+    const box = $('story-existing-att-box');
+    box.style.display = storyExistingAttachments.length ? '' : 'none';
+    $('story-existing-att-list').innerHTML = storyExistingAttachments.map(function (a, i) {
+        return '<li class="' + (a.removed ? 'removed' : '') + '"><span><i class="fas fa-paperclip"></i> ' + esc(a.name || '첨부파일') + '</span>'
+            + '<button type="button" onclick="toggleStoryExistingAttachment(' + i + ')">' + (a.removed ? '삭제 취소' : '삭제') + '</button></li>';
+    }).join('');
+}
+window.toggleStoryExistingAttachment = function (i) {
+    const a = storyExistingAttachments[i];
+    if (!a) return;
+    a.removed = !a.removed;
+    renderStoryExistingAttachments();
+};
+window.toggleStoryRemovePdf = function () {
+    storyRemovePdf = !storyRemovePdf;
+    updateRemoveToggle('story-remove-pdf-btn', storyRemovePdf);
+};
+window.toggleStoryRemoveThumb = function () {
+    storyRemoveThumb = !storyRemoveThumb;
+    updateRemoveToggle('story-remove-thumb-btn', storyRemoveThumb);
+};
+
+function fillStoryCategoryOptions() {
+    $('story-category').innerHTML = Object.keys(window.LAST_HOME.stories || {}).filter(function (n) { return n !== '전체'; }).map(function (n) {
         return '<option value="' + esc(n) + '">' + esc(n) + '</option>';
     }).join('');
+}
 
+function resetStoryForm() {
     $('story-title').value = '';
     $('story-content').innerHTML = '';
     $('story-file').value = '';
@@ -444,7 +550,43 @@ window.openAddStoryModal = function () {
     $('story-pdf-file').value = '';
     $('story-pdf-driveurl').value = '';
     storyPendingAttachments = [];
+    storyExistingAttachments = [];
+    storyRemovePdf = false;
+    storyRemoveThumb = false;
     updateStoryAttachmentStatus();
+}
+
+window.openEditStoryModal = function (id) {
+    if (!window.LAST_HOME) { alert('데이터를 불러온 뒤에 다시 시도해주세요.'); return; }
+    showLoadingOverlay('글 내용을 불러오는 중입니다...');
+    staffApi('getStoryForEdit', [id]).then(function (s) {
+        storyEditingId = id;
+        setStoryEditMode(true);
+        fillStoryCategoryOptions();
+        resetStoryForm();
+        $('story-category').value = s.category;
+        $('story-title').value = s.title || '';
+        $('story-content').innerHTML = s.content || '';
+        storyExistingAttachments = (s.attachments || []).map(function (a) { return { url: a.url, name: a.name, removed: false }; });
+        renderStoryExistingAttachments();
+        $('story-current-pdf-box').style.display = s.pdfFileId ? '' : 'none';
+        $('story-current-thumb-box').style.display = s.thumbnailFileId ? '' : 'none';
+        updateRemoveToggle('story-remove-pdf-btn', false);
+        updateRemoveToggle('story-remove-thumb-btn', false);
+        window.onStoryCategoryChange();
+        openModal('addStoryModal');
+    }).catch(function (err) {
+        alert('글을 불러오지 못했습니다: ' + err.message);
+    }).then(hideLoadingOverlay);
+};
+
+window.openAddStoryModal = function () {
+    if (!window.LAST_HOME) { alert('데이터를 불러온 뒤에 다시 시도해주세요.'); return; }
+    storyEditingId = null;
+    setStoryEditMode(false);
+    const sel = $('story-category');
+    fillStoryCategoryOptions();
+    resetStoryForm();
     sel.selectedIndex = 0;
     window.onStoryCategoryChange();
     openModal('addStoryModal');
@@ -461,8 +603,10 @@ window.submitStory = function () {
     if (editor.querySelector('.image-upload-placeholder')) { alert('이미지 업로드가 아직 진행 중입니다. 잠시 후 다시 시도해주세요.'); return; }
     if ($('story-pdf-file').files[0] && pdfDriveUrl) { alert('PDF 파일 업로드와 구글 드라이브 링크는 둘 중 하나만 입력해주세요.'); return; }
 
-    setBtnLoading('story-submit-btn', true, '등록');
-    showLoadingOverlay('반딧불이야기 글을 게시하는 중입니다...');
+    const editingId = storyEditingId;
+    const label = editingId ? '수정 완료' : '등록';
+    setBtnLoading('story-submit-btn', true, label);
+    showLoadingOverlay(editingId ? '반딧불이야기 글을 수정하는 중입니다...' : '반딧불이야기 글을 게시하는 중입니다...');
 
     const attachmentPromises = storyPendingAttachments.map(readFileAsDataURL);
     Promise.all([readFileAsDataURL($('story-thumbnail')), readFileAsDataURL($('story-pdf-file'))].concat(attachmentPromises)).then(function (r) {
@@ -472,16 +616,30 @@ window.submitStory = function () {
         else if (pdfDriveUrl) { payload.pdfDriveUrl = pdfDriveUrl; }
         const atts = r.slice(2);
         if (atts.length) payload.attachments = atts.map(function (a) { return { base64: a.dataUrl, name: a.name }; });
+        if (editingId) {
+            payload.id = editingId;
+            payload.keepAttachments = storyExistingAttachments
+                .filter(function (a) { return !a.removed; })
+                .map(function (a) { return { url: a.url, name: a.name }; });
+            payload.removePdf = storyRemovePdf;
+            payload.removeThumbnail = storyRemoveThumb;
+            return staffApi('updateStory', [payload]);
+        }
         return staffApi('addStory', [payload]);
     }).then(function () {
         closeModal('addStoryModal');
         return refreshHome();
     }).then(function () {
-        alert('글이 등록되었습니다.');
+        // 수정한 글을 보고 있던 중이면, 바뀐 내용으로 다시 보여줍니다.
+        const panel = $('story-detail-view');
+        if (editingId && panel && panel.classList.contains('active') && panel.dataset.storyId === editingId) {
+            openStoryDetail(editingId, { replace: true, noScroll: true });
+        }
+        alert(editingId ? '글이 수정되었습니다.' : '글이 등록되었습니다.');
     }).catch(function (err) {
-        alert('등록 중 오류가 발생했습니다: ' + err.message);
+        alert((editingId ? '수정' : '등록') + ' 중 오류가 발생했습니다: ' + err.message);
     }).then(function () {
-        setBtnLoading('story-submit-btn', false, '등록');
+        setBtnLoading('story-submit-btn', false, label);
         hideLoadingOverlay();
     });
 };
