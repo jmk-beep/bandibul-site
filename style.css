@@ -346,7 +346,7 @@ html {
       margin-top: var(--header-height);
       height: calc(var(--app-vh) * 100 - var(--header-height));
       min-height: 600px; 
-      background: linear-gradient(rgba(26, 79, 145, 0.7), rgba(26, 79, 145, 0.7)), url('https://cdn.jsdelivr.net/gh/jmk-beep/bandibul-assets@main/homepageloading.mp4') no-repeat center center/cover; 
+      background: linear-gradient(rgba(26, 79, 145, 0.7), rgba(26, 79, 145, 0.7)); 
       display: flex; align-items: center; justify-content: center; text-align: center; color: white; padding: 0 2rem; }
     /* 배경 동영상: HERO_VIDEO_FILE_ID를 설정했을 때만 이 위에 재생됩니다.
        (설정 안 하면 <video> 태그 안에 소스가 없어서 아무것도 안 보이고,
@@ -1417,9 +1417,6 @@ html {
         .hero {
          min-height: 500px; /* 작은 화면에서 600px 고정값 때문에 버튼이 화면 밖으로 밀리던 문제 해결 */
         }
-        .hero-video {
-            object-fit: contain;
-        }
         .hero h1 { font-size: 2.5rem; }
         .logo {
             justify-content: flex-start;
@@ -1741,3 +1738,18 @@ html {
 #story-detail-view .story-page-wrap {
     margin: 0 auto;
 }
+/* ==========================================================================
+   메인화면(히어로) - 휴대폰 세로 화면 전용 (app.js 가 상황에 맞는 클래스를 붙입니다)
+   ========================================================================== */
+/* 휴대폰용 세로 영상이 있을 때: 화면을 꽉 채워서 보여줍니다. */
+.hero.hero-mobile-video .hero-video { object-fit: cover; }
+
+/* 휴대폰용 영상이 없을 때: 가로 영상을 잘리거나 위아래 빈 공간 없이,
+   영상 비율 그대로의 크기로 보여줍니다. */
+.hero.hero-fit-video {
+    height: auto;
+    min-height: 0;
+    aspect-ratio: var(--hero-video-ratio, 16 / 9);
+    padding: 0;
+}
+.hero.hero-fit-video .hero-video { object-fit: cover; }

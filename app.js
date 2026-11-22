@@ -15,7 +15,11 @@ const DONATION_FORM_URL = '';
 const VOLUNTEER_FORM_URL = '';
 const WORK_SYSTEM_URL = 'https://script.google.com/a/macros/littlelight.or.kr/s/AKfycbxhJOsjVhmH7lnq2lko8eMW00r9H6SJY25gR4qT1dIZJCUxZsNMkuB-NxjsrH1J2kLErw/exec?authuser=0';   // 업무시스템
 const INTRANET_URL = 'https://sites.google.com/littlelight.or.kr/test/%ED%99%88';
+// 메인화면 영상: PC(가로 화면)용과 휴대폰(세로 화면)용을 따로 지정할 수 있습니다.
 const HERO_VIDEO_URL = 'https://cdn.jsdelivr.net/gh/jmk-beep/bandibul-assets@main/homepagemain.mp4';
+// ★ 휴대폰 전용 세로 영상 주소를 여기에 넣으세요. (비워두면 휴대폰에서도 PC 영상을
+//   잘림 없이 영상 비율 그대로 보여줍니다)
+const HERO_VIDEO_URL_MOBILE = '';
 
 const $ = function (id) { return document.getElementById(id); };
 
@@ -105,16 +109,43 @@ function openSideLink(url) {
     window.open(url, '_blank', 'noopener');
 }
 
-// 히어로 영상
+// 히어로 영상 (휴대폰 세로 화면 / PC 가로 화면에 따라 다르게)
 (function setupHeroVideo() {
     const video = $('heroVideo');
-    if (!video || !HERO_VIDEO_URL) return;
-    const source = document.createElement('source');
-    source.src = HERO_VIDEO_URL;
-    source.type = 'video/mp4';
-    video.appendChild(source);
+    const hero = $('home');
+    if (!video || !hero || !HERO_VIDEO_URL) return;
+    // 세로로 긴 화면(휴대폰, 세로로 든 태블릿)이면 모바일 화면으로 봅니다.
+    const mobileQuery = window.matchMedia('(max-width: 900px) and (orientation: portrait)');
+    let currentSrc = null;
+
+    function apply() {
+        const isMobile = mobileQuery.matches;
+        const useMobileVideo = isMobile && !!HERO_VIDEO_URL_MOBILE;
+        hero.classList.toggle('hero-mobile', isMobile);
+        hero.classList.toggle('hero-mobile-video', useMobileVideo);   // 세로 영상: 화면을 꽉 채움
+        hero.classList.toggle('hero-fit-video', isMobile && !useMobileVideo); // 가로 영상: 영상 비율대로
+
+        const src = useMobileVideo ? HERO_VIDEO_URL_MOBILE : HERO_VIDEO_URL;
+        if (src === currentSrc) return;
+        currentSrc = src;
+        video.style.display = '';
+        video.src = src;
+        video.load();
+        const p = video.play();
+        if (p && p.catch) p.catch(function () { /* 자동재생이 막혀도 무시 */ });
+    }
+
+    // 영상의 실제 가로세로 비율을 알려줘서, 휴대폰에서 영상 크기에 딱 맞게 보이게 합니다.
+    video.addEventListener('loadedmetadata', function () {
+        if (video.videoWidth && video.videoHeight) {
+            hero.style.setProperty('--hero-video-ratio', video.videoWidth + ' / ' + video.videoHeight);
+        }
+    });
     video.addEventListener('error', function () { video.style.display = 'none'; });
-    video.load();
+
+    if (mobileQuery.addEventListener) mobileQuery.addEventListener('change', apply);
+    else if (mobileQuery.addListener) mobileQuery.addListener(apply);
+    apply();
 })();
 
 // ---------------------------------------------------------------------------
