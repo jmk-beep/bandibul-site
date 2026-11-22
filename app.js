@@ -13,7 +13,7 @@ const HOME_CACHE_KEY = 'bdb_home_v1';
 // ----- 우측 도구모음 링크 -----
 const DONATION_FORM_URL = '';
 const VOLUNTEER_FORM_URL = '';
-const APPSHEET_URL = 'https://www.appsheet.com/start/76325f3d-54bf-4fe2-8036-86ebb79dd858?platform=desktop#appName=%EC%95%B1%EC%8B%9C%ED%8A%B8%ED%86%B5%ED%95%A9-890193808&vss=H4sIAAAAAAAAA52OOw7CMBBE7zK1T-AWUSAEDYgGU5h4LVkkdhQ7QGS55wockjuw4SNaoNzZeTOTcXR0WiVdHSC3-XPNaYBEVlgPLSlIhUnwqQu1glBY6uYp3q4XhYKyE280UYTMX5Py704BZ8gnZx11Y8wIMf5C-D0CLLAdRaDpk97X9FjI9lJYs6HqI5kND_itOM789NxqbxbBcJrVdaRyB5eTdq5MAQAA&view=%ED%99%88';
+const WORK_SYSTEM_URL = 'https://script.google.com/a/macros/littlelight.or.kr/s/AKfycbxhJOsjVhmH7lnq2lko8eMW00r9H6SJY25gR4qT1dIZJCUxZsNMkuB-NxjsrH1J2kLErw/exec?authuser=0';   // 업무시스템
 const INTRANET_URL = 'https://sites.google.com/littlelight.or.kr/test/%ED%99%88';
 const HERO_VIDEO_URL = 'https://cdn.jsdelivr.net/gh/jmk-beep/bandibul-assets@main/homepagemain.mp4';
 
