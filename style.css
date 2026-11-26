@@ -1420,6 +1420,10 @@ html {
         .hero-video {
             object-fit: contain;
         }
+        /* 모바일 전용 세로 영상은 화면을 꽉 채움 */
+        .hero-video.is-mobile-video {
+            object-fit: cover;
+        }
         .hero h1 { font-size: 2.5rem; }
         .logo {
             justify-content: flex-start;

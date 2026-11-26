@@ -16,6 +16,9 @@ const VOLUNTEER_FORM_URL = '';
 const WORK_SYSTEM_URL = 'https://script.google.com/a/macros/littlelight.or.kr/s/AKfycbxhJOsjVhmH7lnq2lko8eMW00r9H6SJY25gR4qT1dIZJCUxZsNMkuB-NxjsrH1J2kLErw/exec?authuser=0';   // 업무시스템
 const INTRANET_URL = 'https://sites.google.com/littlelight.or.kr/test/%ED%99%88';
 const HERO_VIDEO_URL = 'https://cdn.jsdelivr.net/gh/jmk-beep/bandibul-assets@main/homepagemain.mp4';
+// 모바일(화면 너비 768px 이하)용 영상. 비워두면 모바일에서도 PC 영상을 씁니다.
+const HERO_VIDEO_URL_MOBILE = 'https://cdn.jsdelivr.net/gh/jmk-beep/bandibul-assets@main/homepagemain_mobile.mp4';
+const HERO_MOBILE_QUERY = '(max-width: 768px)';
 
 const $ = function (id) { return document.getElementById(id); };
 
@@ -105,16 +108,46 @@ function openSideLink(url) {
     window.open(url, '_blank', 'noopener');
 }
 
-// 히어로 영상
+// 히어로 영상 (PC/모바일 화면 크기에 따라 다른 영상 사용)
 (function setupHeroVideo() {
     const video = $('heroVideo');
     if (!video || !HERO_VIDEO_URL) return;
-    const source = document.createElement('source');
-    source.src = HERO_VIDEO_URL;
-    source.type = 'video/mp4';
-    video.appendChild(source);
-    video.addEventListener('error', function () { video.style.display = 'none'; });
-    video.load();
+    const mq = window.matchMedia ? window.matchMedia(HERO_MOBILE_QUERY) : null;
+    let mobileFailed = false;
+    let currentUrl = '';
+
+    function pickUrl() {
+        if (mq && mq.matches && HERO_VIDEO_URL_MOBILE && !mobileFailed) return HERO_VIDEO_URL_MOBILE;
+        return HERO_VIDEO_URL;
+    }
+
+    function apply() {
+        const url = pickUrl();
+        if (url === currentUrl) return;
+        currentUrl = url;
+        video.classList.toggle('is-mobile-video', url === HERO_VIDEO_URL_MOBILE);
+        video.style.display = '';
+        video.src = url;
+        video.load();
+        const p = video.play();
+        if (p && p.catch) p.catch(function () {});
+    }
+
+    video.addEventListener('error', function () {
+        // 모바일 영상을 못 불러오면 PC 영상으로 대체
+        if (currentUrl === HERO_VIDEO_URL_MOBILE) {
+            mobileFailed = true;
+            apply();
+        } else {
+            video.style.display = 'none';
+        }
+    });
+
+    if (mq) {
+        if (mq.addEventListener) mq.addEventListener('change', apply);
+        else if (mq.addListener) mq.addListener(apply);
+    }
+    apply();
 })();
 
 // ---------------------------------------------------------------------------
