@@ -1,6 +1,6 @@
 /**
  * ==========================================================================
- * 다음카페 → 홈페이지 「소소한일상」 옮기기 (CafeImport.gs)
+ * 다음카페 → 홈페이지 「특별한날」 옮기기 (CafeImport.gs)
  * ==========================================================================
  * 대상: 다음카페 반딧불단기보호센터의 아래 세 게시판 중 2023년 10월 이후 글 63개
  *       (동,하계 캠프지원 / 사회심리지원 / 개별지원) - 사진 499장
@@ -22,7 +22,7 @@
  * ==========================================================================
  */
 
-const CAFE_IMPORT_CATEGORY = '소소한일상';
+const CAFE_IMPORT_CATEGORY = '특별한날';
 const CAFE_IMPORT_FOLDER_NAME = '반딧불_홈페이지_카페이전사진';
 const CAFE_IMPORT_TIME_LIMIT_MS = 4.5 * 60 * 1000;   // 6분 제한보다 여유 있게 끊습니다.
 // 다음 사진 서버에서 가로 1280px로 줄인 사진을 받아옵니다. (원본은 장당 4MB 안팎이라 너무 큼)
@@ -231,4 +231,29 @@ function fixOldStoryDates() {
   }
   invalidateCache_(CACHE_KEY_STORIES);
   Logger.log('완료: ' + changed + '개 글의 날짜를 고쳤습니다.');
+}
+
+/**
+ * 카페에서 옮겨온 글(사진이 「반딧불_홈페이지_카페이전사진」 폴더에 있는 글)을
+ * 모두 CAFE_IMPORT_CATEGORY(특별한날)로 옮깁니다. 직접 올린 글은 건드리지 않습니다.
+ */
+function moveCafePostsToCategory() {
+  const fileIds = {};
+  const files = getOrCreateDriveFolder_(CAFE_IMPORT_FOLDER_NAME).getFiles();
+  while (files.hasNext()) fileIds[files.next().getId()] = true;
+
+  const sheet = getStorySheet_();
+  const colMap = getHeaderIndexMap_(sheet);
+  const values = sheet.getDataRange().getValues();
+  let moved = 0;
+  for (let i = 1; i < values.length; i++) {
+    const content = String(values[i][colMap['Content']] || '');
+    const m = content.match(/thumbnail\?id=([a-zA-Z0-9_-]+)/);
+    if (!m || !fileIds[m[1]]) continue;
+    if (values[i][colMap['Category']] === CAFE_IMPORT_CATEGORY) continue;
+    sheet.getRange(i + 1, colMap['Category'] + 1).setValue(CAFE_IMPORT_CATEGORY);
+    moved++;
+  }
+  invalidateCache_(CACHE_KEY_STORIES);
+  Logger.log('완료: ' + moved + '개 글을 「' + CAFE_IMPORT_CATEGORY + '」(으)로 옮겼습니다.');
 }
