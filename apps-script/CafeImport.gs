@@ -197,3 +197,38 @@ function getCafeImportDone_() {
 function saveCafeImportDone_(done) {
   PropertiesService.getScriptProperties().setProperty(CAFE_IMPORT_PROP_KEY, JSON.stringify(done));
 }
+
+/**
+ * 예전에 직접 올린 「소소한일상」 글 10개의 날짜를 다음카페(외부강사지원 게시판)에
+ * 올렸던 원래 날짜로 고칩니다. 글 ID로 찾아 Date, CreatedAt 칸만 바꿉니다.
+ */
+function fixOldStoryDates() {
+  const FIXES = {
+    '26100641-9838-4163-ac59-b13c5bfeeede': '2023-10-16', // 23년 10월 레크레이션 활동
+    'bac80751-48e3-4750-8928-36fff9678e23': '2023-11-02', // 23년 10월 푸드아트테라 활동
+    'a840d601-23e9-4b5f-8207-0a8ba0e68e59': '2023-11-28', // 23년 11월 푸드아트테라피 활동
+    '2d9b8ebf-ece7-44a1-813c-bdd5e1d08a40': '2023-12-18', // 23년 11월 레크레이션 활동
+    'b9f748ea-bfbe-4878-91fa-8d107bfa1a65': '2023-12-25', // 23년 12월 레크레이션 활동
+    '06e811f6-aad3-49cd-89c3-3ab8c7f29916': '2024-01-03', // 23년 12월 푸드아트테라피 활동
+    'ff09ea2e-c89c-4377-9d31-f436ad77da55': '2024-01-22', // 24년 1월 레크레이션 활동
+    '12020243-02b9-433c-9d60-249e213ba8a7': '2024-01-31', // 24년 1월 푸드아트테라피 활동
+    '05f104c3-c06c-40ad-a66b-779f394e89c0': '2024-02-01', // 24년 1월 장애인체육회
+    '33a48a03-395c-4df6-b35c-867487e6df2b': '2024-02-01'  // 24년 천안시장애인종합복지관 종이공예 활동
+  };
+  const sheet = getStorySheet_();
+  const colMap = getHeaderIndexMap_(sheet);
+  const values = sheet.getDataRange().getValues();
+  let changed = 0;
+  for (let i = 1; i < values.length; i++) {
+    const id = values[i][colMap['ID']];
+    const newDate = FIXES[id];
+    if (!newDate) continue;
+    sheet.getRange(i + 1, colMap['Date'] + 1).setValue(newDate);
+    sheet.getRange(i + 1, colMap['CreatedAt'] + 1)
+        .setValue(Utilities.parseDate(newDate + ' 12:00', 'Asia/Seoul', 'yyyy-MM-dd HH:mm'));
+    Logger.log('날짜 변경: ' + values[i][colMap['Title']] + ' → ' + newDate);
+    changed++;
+  }
+  invalidateCache_(CACHE_KEY_STORIES);
+  Logger.log('완료: ' + changed + '개 글의 날짜를 고쳤습니다.');
+}
