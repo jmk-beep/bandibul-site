@@ -260,14 +260,13 @@ function moveCafePostsToCategory() {
 
 
 // ===========================================================================
-// 2차: 회의 게시판 → 「열린운영」
-//  대상: 인권지킴이단회의 / 운영위원회 / 회의 게시판의 2023년 10월 이후 글 17개 (사진 33장)
-//  본문 글 + 사진을 원래 순서대로 옮깁니다.
-//  실행: importCafeMeetingPosts  (진행 확인: cafeMeetingImportStatus)
+// 2차 이후: 본문 글 + 사진을 원래 순서대로 옮기는 묶음들
+//  · 회의 묶음 → 「열린운영」 : 인권지킴이단회의 / 운영위원회 / 회의 (2023년 10월 이후 17개, 사진 33장)
+//      실행: importCafeMeetingPosts   진행 확인: cafeMeetingImportStatus
+//  · 교육 묶음 → 「배움」     : 교육 / 부모간담회(교육) / 직원(교육및연수) (2023년 10월 이후 25개, 사진 111장)
+//      실행: importCafeEduPosts       진행 확인: cafeEduImportStatus
+//  각 묶음은 옮긴 글 번호를 따로 기록하므로 여러 번 실행해도 중복되지 않습니다.
 // ===========================================================================
-const CAFE_MEETING_CATEGORY = '열린운영';
-const CAFE_MEETING_FOLDER_NAME = '반딧불_홈페이지_카페이전사진_회의';
-const CAFE_MEETING_PROP_KEY = 'CAFE_MEETING_IMPORT_DONE_V1';
 
 const CAFE_MEETING_POSTS = [
   {"key":"kVAF/19","board":"운영위원회","title":"2023년 3차 운영위원회의 개최복","date":"2023-11-13 12:05","blocks":["1. 일시: 2023.09.14(10:30~11:30)","","2. 장소: 반딧불단기보호센터(천안시 서북구 신당새터1길 72)","","3. 참석: 9명 중 5명 참석","","4. 안건","- 2023년 상반히 프로그램 결과 보고","- 2023년 하반기 프로그램 계획 보고","- 2023년 1월~8월 세입.세출 결산 보고","- 2023년 1월~8월 후원금 수입 및 지출 보고","- 2023년 2차 추가경정예산(안) 심의","- 시설 이전 건축지 현황 보고","- 기타안건","","img:dc12e8db831d1fbc19b9ebfe646edb62c62fa39b"]},
@@ -289,7 +288,59 @@ const CAFE_MEETING_POSTS = [
   {"key":"kVAH/21","board":"인권지킴이단회의","title":"26년 1분기 인권지킴이단 정기 회의","date":"2026-03-25 14:10","blocks":["3월 인권지킴이단 정기 회의를 개최하고 위촉장을 전달 하였습니다.","1월, 2월 , 3월 종사자 , 이용인 인권점검도 실시하였습니다. ^^","img:275a4e5a2f8cfbac5b367dd83197a4ab1da166f5","2월 종사자 인권점검","img:724ac4164d8a0aff828d97905f564cf1e7d0e987","2월 이용인 인권점검","img:5c1eca8ad0bd1ef6841c15e0993d36e7da5d3509","26년 1분기 인권지킴이단 위촉장 수여"]}
 ];
 
-function importCafeMeetingPosts() {
+const CAFE_EDU_POSTS = [
+  {"key":"kJWw/55","board":"직원(교육및연수)","title":"반딧불종사자 인권교육","date":"2023-10-12 09:53","blocks":["인권강사 전용필(등대의집)종사자 인권교육 진행 사진입니다~~","10/11(13:00~17:00) 실시하였습니다.","img:345ead6b2cd0b48ccb6bb3c46218b2ce2536c584","","img:cfde146c02ec0d2ba43e60cd072718485caae994","img:e3a475da8121c5c8bd42c6e224cd2ab23f9d5168","img:9bc5f326646f17a27bb3cad7d259a35165aefb88","img:fb12fdd605fe30a087e1bc2a7194c589e88c0bfb"]},
+  {"key":"kJWw/56","board":"직원(교육및연수)","title":"23년 반딧불 약물오남용 및 성인병교육실시","date":"2023-10-24 10:34","blocks":["반딧불단기보호센터 23년 10/18 이용인 종사자","약물 오남용 및 성인병 교육실시 결과입니다.","img:dace924b0df366a03d6e961317909529d5396cc7","img:35b3496d22dfa3b759accb9f96e135a6b004c5b0","img:2d4466819147ea527d62d737574e6a1a4a8813e3","img:d14f18f45f536c8f6e7ced4dddcc1f99f9e132e6"]},
+  {"key":"kJWw/57","board":"직원(교육및연수)","title":"중대재해교육","date":"2023-11-23 14:31","blocks":["2023년 11.06(월요일) 한국기업교육원 주최 교육실시","종사자&이용인 교육받았음","img:d155a60058ab262703832bb5c16b32c9cf1b89cd","img:cb00db6dfc81bd3c5bff0c323c7bbe1fc1544861","img:5de46a0d7877ba8acf12d8ae4d8b35782a5cbbc3","img:c7d00089db86e3b96074e21fb46407baffdbb1db","img:c01ccca9c872009253f0c37554178f69886f31a7","img:e8bd148dfbef32946c640438a41e4b6e1a829f34"]},
+  {"key":"kJWw/58","board":"직원(교육및연수)","title":"2023년 소방화재 모의훈련 실시","date":"2023-11-23 14:37","blocks":["반딧불 자체 소방훈련을 실시하였습니다.","종사자/이용인 전원이 실제 상황처럼 신속하게 훈련에 임하였습니다.","img:2c2b9a5f3d946ae04a6a3902a78b27abcd1f8615","img:0c5907e670728c043b5cc09791547b2ee33def27","img:911a69a2379764a95dc2b97d86c47eac7e9b7d87","img:7d706bcf60bda04e0222352cd883f4b924d1af0d","img:4c5f7eb15c5ce30cd7ee6bcd486e5923e4d78aa9","img:e6b19b38b28df531a9f87bd6f1cc6ee25552b407"]},
+  {"key":"kJWx/90","board":"교육","title":"2024년 사회복지실습.","date":"2024-01-18 17:03","blocks":["2024년 제1차 사회복지실습을 시작하였습니다.","나사렛대학교 3학년 김 0 규 1/8~2/2 실시합니다~~","img:021c15652ccf0f062045eead63ed2a7e6f6d7b4c","img:7cd1210c275bacda3cff63a574271b8080cc2a0c","img:b8302c61f694b47def07ffff3739b37ee068fc4d","img:1acbcdfd329398dc33edae91d8e80501e3d190a9","img:e451910a866d722f3edfb71dd4420b872b957952"]},
+  {"key":"kJWx/91","board":"교육","title":"2024 산업안전협회교육","date":"2024-02-26 09:32","blocks":["* 중대재해처벌법 교육실시~~","img:05fad0018f019905466bdc18b685bc3070ab8b4b","img:864b580091e1e8a998a1c4c342d9b46284dd10cd","img:a67872bfb54e74f42334b598103aa828a72031f7","img:0f3ed03a4bee21c4cbafeb6cf5362ba76e398973","2024.02.07","산업안전협회~~강사 (배경규)"]},
+  {"key":"kJWx/92","board":"교육","title":"긴급복지신고의무자교육실시","date":"2024-02-26 09:40","blocks":["2024.02.19~~실시","강사:반딧불단기보호 김교 (원장님)","img:cb9a3c7d9f805bbf53ce7ffe6e6afb042e59e1cd","img:e9b5c6193366de232ed87288c9029b7f3098d244","img:baa3bd8557505516c574fa70f185f54e473f3038","img:d941597cfeaa7d116006ef0e1c1a01b0e6d83f03","img:f6eb11fad5053d83a61b7b22a83c39cb92816c1d"]},
+  {"key":"kJWx/93","board":"교육","title":"개인정보보호/CPR 교육실시","date":"2024-02-26 09:51","blocks":["2024.02.21 실시-강사:박동","이에스한국법정진흥원주최","img:f30bb980e63715cf73cdc64d2a4d86ecfdbe72c0","img:7227da780f7a47ede20a7a0a5a632eb65c0e90ee","img:855d7f20dc304ce48247136c254f9d8ce2b49017","img:5f17e47d8a47d5091ac23a4ea761e2339f762032","img:4a4e714fc8dd64c59664820244dd630f0f843091"]},
+  {"key":"kJWw/59","board":"직원(교육및연수)","title":"2024년 장애인식개선교육(종사자)","date":"2024-03-13 16:28","blocks":["충남지역장애인보건의료센터 주최로 교육을 실시 하였습니다","03/13 (수)요일 10:20~11:30","img:2b9032004cb92cfb0d3103e3620acdafbc61079a","img:b2bc2dc3bb87c37f82b00419ba07ef4fbfe1dd9d","img:9c3a30b8f683a54441b4523419aa36335dfac5d7","img:00f3a6a1d1355c5b5f65e0382a82c4eaf0d61dde"]},
+  {"key":"kJWx/94","board":"교육","title":"2024년 사회복지실습.","date":"2024-08-06 18:23","blocks":["2024년사회복지실습2차 03/18~04/15","남서울대학교평생교육원~~김0숙실습종료하셨습니다.","img:407492577b0d061c243b93788d5f5a2411040ba8"]},
+  {"key":"kJWx/95","board":"교육","title":"2024년 사회복지실습.","date":"2024-08-06 18:27","blocks":["2024 제3차 사회복지실습","위더스사이버 이 0 아 선생님 07/22~08/19 까지 합니다.","img:75497f164f52f0e8441803a3ef69452f599b4812","","img:740e6ba6fb542864b4a3e1e535fb737cbac1e47d"]},
+  {"key":"kVAG/11","board":"부모간담회(교육)","title":"2024년 부모간담회 실시","date":"2024-10-04 13:10","blocks":["상반기 예정이었던 부모간담회를 하반기에 실시 하였습니다.","이용인 부모님 전원 참석은 못하였지만 참석하신 부모님들게서 적극적으로 회의에","참여해 주신덕분에 회의를 잘 마무리 하였습니다.","img:f78c8c360b4fc1efbc689394929f32bd577636f7","img:42cf43d7b8ca9797d2e901eb157ed3bee7efd30c","img:6a3900d38b8d0097848694d847c9122cc4461913","img:f956b48d16589c72ddd3cf2e24487860412a224c","img:e1620c32b42701e2f70e50e062b5b5018c6ceef9","img:f8c7f3e09a01d11c67f5f604952c383b1449365a"]},
+  {"key":"kJWx/96","board":"교육","title":"24년도 마지막 소방 모의 훈련 ( 소방합동)","date":"2024-11-25 10:01","blocks":["img:04942c79f81f6298c73cb6f199fbc2e9de14551c","img:e685e41d6ac88d56f7648e492b881c1401133970","img:f97b0ee0df2465602849b4eaa4862a575a174cce","img:9df8cacdad9d832b976ea7e3bef656c9ec93ee6f","직산 안전센터 협조로 11월 22일 소방훈련 진행 하였습니다.","소방관 님들이 함께 해주셔서 정말 소방훈련 하는 것 같았습니다. .... 예정된 시간보다 늦게 시작 하긴 했지만 ( 고속도로에서 불이 나서 조금 늦게 함께 해주셨거든요.. ) 소방 진화 끝나고 함께 해주셔서 감사하고, 죄송한 마음이었습니다.","그래도 친절히 함께 해주셔서 감사합니다.","","내년에도 소방 합동훈련때는 신세를 좀 져야 겠네요.. ^6^","","올해 소방훈련은 모두 완료 되었습니다. 불이 나지 않게 조심조심... 화재로 소방관님들을 보는 일이 없는 한해가 되길 바랍니다.","훈련에 수고해주신 이용인, 선생님 , 소방관님 고생하셨습니다."]},
+  {"key":"kVAG/12","board":"부모간담회(교육)","title":"25년 3/14일 반딧불부모교육실시","date":"2025-03-19 13:26","blocks":["25년 상반기 부모교육을 실시하였습니다.","8가정 부모님게서 참석을 하셔서 잘 진행하였습니다.","img:53a1b6fc95a31aac033d9b413e9bc216281777c1","img:ed23275733e6e4313127f6d0993c55844a73cc42","img:872546e0c49ec317d160d13c929762e208f89165"]},
+  {"key":"kJWx/97","board":"교육","title":"25년1차 사회복지실습","date":"2025-03-19 13:37","blocks":["25년 사회복지실습을 시작~~","김0화선생님 3/10~4 / 4 올에듀 (평생교육원)","img:12204832e2f53790eee29ea840c3f35c21a32590","img:7e92e1b72d7d6182b83fd17d7486a697c3e742ef"]},
+  {"key":"kJWx/98","board":"교육","title":"2025년 소방모의체험훈련","date":"2025-05-02 17:09","blocks":["2025년 4월24일 직산119안전 센터와 합동으로 실시한","자체소방 모의훈련 결입니다~~","img:3a01c1176764152d41bd94c72c45c9eef7a761ca","img:b3244523dd7cf3e35c72057a78bb842ba94c93a1","img:c51d1fbc81e1ee51a540b05c78aa5f04ce383656","img:dbeb2e75448fd297d7fe454762717b7c5d6e586b","img:9b39cdbdf12de46a9fab623a9d82868329871316","img:56b1e0d079556aa61c6756e80811c14ed1612a99","img:c6d4a3bb12b792d55568f16de68be7cd083cf0f1"]},
+  {"key":"kJWx/99","board":"교육","title":"2025년 응급처치술체험","date":"2025-05-02 17:19","blocks":["2025년 05월01일 (충남안전체험관)","반딧불이용인/종사자 응급처치술체험","img:b3e7f5050c9286811ff345576d01829828ffb6ce","img:52ec4102079027e73247201664b4a40f83428fb3","img:c62edf2598cec79e98c1996c5f08f8e06ea89835","img:821dab5112b7677aaeb9c688c514df78c5071b18","img:8de8722729777df1bd92ce281ae9d78f30f58f59","img:e89cd9a46fa13cbab785c2daeaafaa3b1bd8cab3","img:d739ec1ccb29b423cda3d5b4627e145a634f12da"]},
+  {"key":"kJWw/60","board":"직원(교육및연수)","title":"2025년 신입종사자교육","date":"2025-07-09 18:33","blocks":["2025년 7월1일 입사자 김 o 희T 김교식(원장님) 반딧불 운영에 대한교육","이선자(팀장) 생활재활 전반교육실시 하였음.","img:4d50eaba7cc5debc076417c26a52911e1a453b13","img:7d617c966ad608d77f15b655e9a008c34b51edae","img:a42e94f0cea23b8ef19b14e54486e2bd735020cc","img:9065b9e9eae443e8f79d4b893fba3e704ca3b995"]},
+  {"key":"kJWx/100","board":"교육","title":"종사자 인권교육 ＜25년 8월 11일 ＞","date":"2025-08-20 13:40","blocks":["img:17d23725c263e51b30f5de1de3befe2b2d19107a","img:44e2f81e1d6646fbad0af0dce488bda93e999f18","25년 8월 11일 월요일 모든 종사자 인권교육 중입니다. 4시간 교육이라 힘드네요ㅜㅜ","","종사자의 인권, 장애인 당사자의 인권.. 인권교육은 매년 몇시간씩 해도 어려운 교육인것 같습니다. 직원모두 참석하여 인권교육 중이네요.. 방학이라 이용인들 모습도 잠깐씩 보이네요. ^6^","","강사님.. 교육들으랴 이용인들 돌보느라 정신이 없었습니다.. 모두들 고생하셨네요.. ^^"]},
+  {"key":"kJWx/101","board":"교육","title":"소방훈련","date":"2025-08-20 13:46","blocks":["2025년 8월13일 직산119안전센터 합동훈련 상황","img:72a794a7085be46e4cee1404774512faf8e6bd7d","img:843e7a887bb648ca2edd31670fd1500fc08e6253","img:f970e57998ba4060a8246479fe5e07dba78c09cd","img:f0585632de98d06e70ac2ec79f1862b9baeb27c6","img:b40a25e7cbd9fe228a83f1ca44cb779b425eb959","img:69112b61c8012a3107314aa1f3ef31d8639267a6"]},
+  {"key":"kJWx/102","board":"교육","title":"2025년도 약물 오,남용 교육","date":"2025-08-20 14:12","blocks":["일 시 : 2025.08.11.","대 상 : 이용인,종사자","img:a6cf0f521ddc4a27787827aee5a2b770a9510156","img:0e2e46e9deabb9769fe389195edb6c2b68253414","img:99a2a650f1c015bd2021f7217944501398e3468c","img:e0f76271d3294630591071b6a85c9cc4573a502d"]},
+  {"key":"kVAG/13","board":"부모간담회(교육)","title":"2026년 반딧불단기보호센터","date":"2026-03-25 16:12","blocks":["부모간담회 실시 사진","img:14857f2353de09a3bcaf52fc1d285e19a8f4ee77","img:29a92fcc03ee15ef865d317fe19aad49e7a9a08e","img:342589e3c0bbd0ebf56f9c22536d32b124345c7b","img:a30e0180faa404698e41be127c63d6c89c681c38"]},
+  {"key":"kJWx/103","board":"교육","title":"26년 6/18일 직산119센터 합동훈련","date":"2026-07-01 15:48","blocks":["직산119안전센터와 합동으로 심폐소생술과","소방모의 훈련을 실시 하였습니다.~~","img:ac71dd0c36ac02d658de1bd419e6cd5dd9393a9f","img:1f9710c49c5647e1e16ea957165bb19c22bafcfb","img:a7ea72dacd24c9e629c93bc6f0b4df51f3c2f85a","img:2d777827126c317ac848af656238aca29f735061","img:fde0c49bf7a7a76c3d9cece4ef5629c0ddb8d9c9"]},
+  {"key":"kJWx/104","board":"교육","title":"성폭력예방교육","date":"2026-07-09 10:51","blocks":["7/8일 다함센터주관으로 진행되었습니다","img:f712419cd69851324d56b040e488468137306f33","img:d9d6438d2ddfefd2027baebc73d38ca3ea98dfd1","img:8924f70eb84fe7cc39f56191bfcf28c9bff812fa","img:1f74bf6fc802edfd70775742e5511dcbba5a8672"]},
+  {"key":"kJWx/106","board":"교육","title":"응급처치교육과 안전교육을 받았습니다~~","date":"2026-08-03 15:03","blocks":["응급처치술을 실습하는 모습입니다~~","안전교육도 열심히 참여하여 모두가 적극적인 교육이 되었습니다~~","img:b4b75ba195b0bc7fec51c8405da5a9b390d17558","img:93191c1228bb4c32491fd848b3b0ffa421caa832","img:c27cda1758afa6e1e4387f705bc5551358a0c4a2","img:f7b01dffdc07ef75ad16d91d12b7eb1152f17d6d","img:487651ae2b2d9c1d446d6808bbad210e5d90acb5","img:22bf4f8a84f5758d2c1a6d99fe45359ee18059b9"]}
+];
+
+const CAFE_BATCHES = {
+  meeting: {
+    posts: function () { return CAFE_MEETING_POSTS; },
+    category: '열린운영',
+    folder: '반딧불_홈페이지_카페이전사진_회의',
+    propKey: 'CAFE_MEETING_IMPORT_DONE_V1',
+    handler: 'importCafeMeetingPosts'
+  },
+  edu: {
+    posts: function () { return CAFE_EDU_POSTS; },
+    category: '배움',
+    folder: '반딧불_홈페이지_카페이전사진_교육',
+    propKey: 'CAFE_EDU_IMPORT_DONE_V1',
+    handler: 'importCafeEduPosts'
+  }
+};
+
+function importCafeMeetingPosts() { runCafeBatch_('meeting'); }
+function importCafeEduPosts() { runCafeBatch_('edu'); }
+function cafeMeetingImportStatus() { logCafeBatchStatus_('meeting'); }
+function cafeEduImportStatus() { logCafeBatchStatus_('edu'); }
+
+function runCafeBatch_(name) {
+  const cfg = CAFE_BATCHES[name];
+  const posts = cfg.posts();
   const started = Date.now();
   const lock = LockService.getScriptLock();
   if (!lock.tryLock(5000)) {
@@ -298,19 +349,19 @@ function importCafeMeetingPosts() {
   }
   try {
     ScriptApp.getProjectTriggers().forEach(function (t) {
-      if (t.getHandlerFunction() === 'importCafeMeetingPosts') ScriptApp.deleteTrigger(t);
+      if (t.getHandlerFunction() === cfg.handler) ScriptApp.deleteTrigger(t);
     });
     const props = PropertiesService.getScriptProperties();
-    const done = JSON.parse(props.getProperty(CAFE_MEETING_PROP_KEY) || '{}');
+    const done = JSON.parse(props.getProperty(cfg.propKey) || '{}');
     const sheet = getStorySheet_();
-    const folder = getOrCreateDriveFolder_(CAFE_MEETING_FOLDER_NAME);
+    const folder = getOrCreateDriveFolder_(cfg.folder);
     let added = 0, skipped = 0, failedImages = 0;
 
-    for (let i = 0; i < CAFE_MEETING_POSTS.length; i++) {
-      const post = CAFE_MEETING_POSTS[i];
+    for (let i = 0; i < posts.length; i++) {
+      const post = posts[i];
       if (done[post.key]) { skipped++; continue; }
       if (Date.now() - started > CAFE_IMPORT_TIME_LIMIT_MS) {
-        ScriptApp.newTrigger('importCafeMeetingPosts').timeBased().after(60 * 1000).create();
+        ScriptApp.newTrigger(cfg.handler).timeBased().after(60 * 1000).create();
         Logger.log('시간이 다 되어 여기서 멈춥니다. 1분 뒤 자동으로 이어서 실행됩니다. (이번에 ' + added + '개 추가)');
         invalidateCache_(CACHE_KEY_STORIES);
         return;
@@ -341,7 +392,7 @@ function importCafeMeetingPosts() {
       const dateOnly = post.date.substring(0, 10);
       sheet.appendRow(buildRowByHeaderNames_(sheet, STORY_HEADERS, {
         ID: Utilities.getUuid(),
-        Category: CAFE_MEETING_CATEGORY,
+        Category: cfg.category,
         Title: post.title,
         Content: parts.join(''),
         Date: dateOnly,
@@ -355,21 +406,23 @@ function importCafeMeetingPosts() {
         PdfFileId: ''
       }));
       done[post.key] = true;
-      props.setProperty(CAFE_MEETING_PROP_KEY, JSON.stringify(done));
+      props.setProperty(cfg.propKey, JSON.stringify(done));
       added++;
       Logger.log('추가: [' + post.board + '] ' + post.title + ' (' + dateOnly + ')');
     }
     invalidateCache_(CACHE_KEY_STORIES);
-    Logger.log('완료! 이번에 ' + added + '개 추가, 이미 있던 글 ' + skipped + '개 건너뜀, 실패한 사진 ' + failedImages + '장');
+    Logger.log('완료! 「' + cfg.category + '」에 이번에 ' + added + '개 추가, 이미 있던 글 ' + skipped + '개 건너뜀, 실패한 사진 ' + failedImages + '장');
   } finally {
     lock.releaseLock();
   }
 }
 
-function cafeMeetingImportStatus() {
-  const done = JSON.parse(PropertiesService.getScriptProperties().getProperty(CAFE_MEETING_PROP_KEY) || '{}');
-  const remaining = CAFE_MEETING_POSTS.filter(function (p) { return !done[p.key]; });
-  Logger.log('전체 ' + CAFE_MEETING_POSTS.length + '개 중 ' + (CAFE_MEETING_POSTS.length - remaining.length) + '개 완료, ' + remaining.length + '개 남음');
+function logCafeBatchStatus_(name) {
+  const cfg = CAFE_BATCHES[name];
+  const posts = cfg.posts();
+  const done = JSON.parse(PropertiesService.getScriptProperties().getProperty(cfg.propKey) || '{}');
+  const remaining = posts.filter(function (p) { return !done[p.key]; });
+  Logger.log('「' + cfg.category + '」 전체 ' + posts.length + '개 중 ' + (posts.length - remaining.length) + '개 완료, ' + remaining.length + '개 남음');
 }
 
 function escapeHtmlForImport_(s) {
