@@ -265,6 +265,8 @@ function moveCafePostsToCategory() {
 //      실행: importCafeMeetingPosts   진행 확인: cafeMeetingImportStatus
 //  · 교육 묶음 → 「배움」     : 교육 / 부모간담회(교육) / 직원(교육및연수) (2023년 10월 이후 25개, 사진 111장)
 //      실행: importCafeEduPosts       진행 확인: cafeEduImportStatus
+//  · 자원봉사 묶음 → 「나눔동행」 : 자원봉사자활동 사진 (2023년 10월 이후 5개, 사진 27장)
+//      실행: importCafeVolunteerPosts 진행 확인: cafeVolunteerImportStatus
 //  각 묶음은 옮긴 글 번호를 따로 기록하므로 여러 번 실행해도 중복되지 않습니다.
 // ===========================================================================
 
@@ -316,6 +318,14 @@ const CAFE_EDU_POSTS = [
   {"key":"kJWx/106","board":"교육","title":"응급처치교육과 안전교육을 받았습니다~~","date":"2026-08-03 15:03","blocks":["응급처치술을 실습하는 모습입니다~~","안전교육도 열심히 참여하여 모두가 적극적인 교육이 되었습니다~~","img:b4b75ba195b0bc7fec51c8405da5a9b390d17558","img:93191c1228bb4c32491fd848b3b0ffa421caa832","img:c27cda1758afa6e1e4387f705bc5551358a0c4a2","img:f7b01dffdc07ef75ad16d91d12b7eb1152f17d6d","img:487651ae2b2d9c1d446d6808bbad210e5d90acb5","img:22bf4f8a84f5758d2c1a6d99fe45359ee18059b9"]}
 ];
 
+const CAFE_VOLUNTEER_POSTS = [
+  {"key":"bDcZ/119","board":"자원봉사자활동 사진","title":"23년12월16일 산타잔치 참여","date":"2023-12-21 13:44","blocks":["* 개인 자원봉사/기타연주와 노래 재능기부","- 군서2리 김준환이장님, 강지숙 가수님","img:98eeef32c8f30a60d9b16668f21930e938572950","*. 정미현님, 정유진님","-. 따뜻한맘을가진사람들의모임 회원/ 장고치기 재능기부","img:b8c641ab46d46454b27a9f010c1bb6d3486338d8","","*. 천안에서기타를연주하는사람들의모임","-이종숙회장님외 회원님들","img:429a5f89f280a38940b26f4eca29043972688756"]},
+  {"key":"bDcZ/120","board":"자원봉사자활동 사진","title":"24.01.17.그린하트봉사단 원예봉사","date":"2024-01-19 20:33","blocks":["*. 반딧불이용인들과 그린하트봉사단(자원봉자자)과 함께 예쁜화분에 \" 호주매화\"를 심으며","원예활동을 하며 즐겁고 뜻깊은 시간을 갖었습니다.","img:e0a22876ef48f90e3d60a57e81304fa884aeb8d2","img:7bfb14d6dbb27b3313995e72bf655cfa55a3b45a","img:a49f3fc51ea1c0e35e6b26aeeb44b0a736501d82","img:840a3741cf12dca27f5e758fcc6e8b9dcc31e431","img:05814f2ee1e65cee355472b009e9dcda733d0a6f"]},
+  {"key":"bDcZ/121","board":"자원봉사자활동 사진","title":"24년 04월 27일 자원봉사자와 함께 나들이","date":"2024-05-07 11:32","blocks":["+. 따뜻함맘을가진사람들의모임(자원봉사자)와 함께 하는 나들이.","장소 : 서천 신성리갈대밭, 서천 국립생태원","","img:bf9161f02597cd893e91ac660275433cbf38e6d2","img:697545d725cb913c46f392137dc6a2a80a849205","img:f32e35ad71130e9d770729cabe462c7bc82363cc","img:3e0575f0f229c329ea1a58ab5a9756cc6afddb6c","img:09adec5c8f11e03fbd437e194eaf17953d2f07be","img:9b47f826a2dd711a4f991a359768978eb846e73a","img:a91415dc7d3e795f7e2af72c4851d3d62c65be21","img:d10d623e07dab624bfba219e42762fff5da6bee1"]},
+  {"key":"bDcZ/122","board":"자원봉사자활동 사진","title":"24.10.05. 자원봉사자와 함께 역사 탐방 여행","date":"2024-10-18 10:43","blocks":["1. 장 소 : 청와대, 국민품으로 / 경복궁","2. 주최, 후원 : 한줄두줄나눔 봉사단, 천안남산로타리클럽","img:e27d0bad31664f8223abd85ad51ae1b1f68760b5","img:ec22b9d12605b270058e1868968f308832db2350","img:5b4f3306f17900f7a5274754d31d020953df799b","img:58e00e16ee1da9097e2c1ab2e9dddabd3cffa2cf","img:eae32a4659dc588fb021327ea37c15ccc44ff14b","img:9e74ce5f0453f89b877e7152dcbbed8e966ada3e","img:0aef4cec46763cffcce0150a48e16f8ac4ee3127"]},
+  {"key":"bDcZ/123","board":"자원봉사자활동 사진","title":"2026년 한줄 주줄봉사단체 방문","date":"2026-08-11 09:14","blocks":["7/31일 한줄두줄 단체에서 더운날씨임에도 반딧불에","닭곰탕으로 점심식사를 제공해 주셨습니다~~","img:8096118ed1b5da046a49dc925d17357a8bf56cd4","img:f35c900346e9b8f6d1c7deb29041b1c20da8927a","img:515e1f6f003cdcdf31bb336011e1043599536597","img:829f19ccd80aa976f856a4ebb0fb345921200dae"]}
+];
+
 const CAFE_BATCHES = {
   meeting: {
     posts: function () { return CAFE_MEETING_POSTS; },
@@ -330,6 +340,13 @@ const CAFE_BATCHES = {
     folder: '반딧불_홈페이지_카페이전사진_교육',
     propKey: 'CAFE_EDU_IMPORT_DONE_V1',
     handler: 'importCafeEduPosts'
+  },
+  volunteer: {
+    posts: function () { return CAFE_VOLUNTEER_POSTS; },
+    category: '나눔동행',
+    folder: '반딧불_홈페이지_카페이전사진_자원봉사',
+    propKey: 'CAFE_VOLUNTEER_IMPORT_DONE_V1',
+    handler: 'importCafeVolunteerPosts'
   }
 };
 
@@ -337,6 +354,41 @@ function importCafeMeetingPosts() { runCafeBatch_('meeting'); }
 function importCafeEduPosts() { runCafeBatch_('edu'); }
 function cafeMeetingImportStatus() { logCafeBatchStatus_('meeting'); }
 function cafeEduImportStatus() { logCafeBatchStatus_('edu'); }
+function importCafeVolunteerPosts() { runCafeBatch_('volunteer'); }
+function cafeVolunteerImportStatus() { logCafeBatchStatus_('volunteer'); }
+
+/**
+ * 1차로 옮긴 글 중 산타행사·따사모(따뜻한맘을가진사람들의모임)와 함께한 글을 「나눔동행」으로 옮깁니다.
+ * 제목이 정확히 같고, 지금 「특별한날」 또는 「소소한일상」에 있는 글만 바꿉니다.
+ */
+function moveVolunteerPostsToSharing() {
+  const TITLES = [
+    '23년12월16일(토) 산타잔치 지원',
+    '24년 12월14일 반딧불 산타행사',
+    '24.11.02 자원봉사자와 추계여행',
+    '24.12.14. 산타행사 지원',
+    '24.12.14. 산타행사 2',
+    '2025년 태안 청산수목원(자원봉사단 따사모)',
+    '2025년 산타행사(자원봉사단 따사모)',
+    '2026년 파주헤이리마을(자원봉사단 따사모)',
+    '2026년 따사모(자원봉사자)와 함께 하는 사회체험학습'
+  ];
+  const sheet = getStorySheet_();
+  const colMap = getHeaderIndexMap_(sheet);
+  const values = sheet.getDataRange().getValues();
+  let moved = 0;
+  for (let i = 1; i < values.length; i++) {
+    const title = values[i][colMap['Title']];
+    const cat = values[i][colMap['Category']];
+    if (TITLES.indexOf(title) === -1) continue;
+    if (cat !== '특별한날' && cat !== '소소한일상') continue;
+    sheet.getRange(i + 1, colMap['Category'] + 1).setValue('나눔동행');
+    Logger.log('나눔동행으로 이동: ' + title);
+    moved++;
+  }
+  invalidateCache_(CACHE_KEY_STORIES);
+  Logger.log('완료: ' + moved + '개 글을 「나눔동행」으로 옮겼습니다.');
+}
 
 function runCafeBatch_(name) {
   const cfg = CAFE_BATCHES[name];
