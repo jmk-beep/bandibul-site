@@ -257,3 +257,121 @@ function moveCafePostsToCategory() {
   invalidateCache_(CACHE_KEY_STORIES);
   Logger.log('완료: ' + moved + '개 글을 「' + CAFE_IMPORT_CATEGORY + '」(으)로 옮겼습니다.');
 }
+
+
+// ===========================================================================
+// 2차: 회의 게시판 → 「열린운영」
+//  대상: 인권지킴이단회의 / 운영위원회 / 회의 게시판의 2023년 10월 이후 글 17개 (사진 33장)
+//  본문 글 + 사진을 원래 순서대로 옮깁니다.
+//  실행: importCafeMeetingPosts  (진행 확인: cafeMeetingImportStatus)
+// ===========================================================================
+const CAFE_MEETING_CATEGORY = '열린운영';
+const CAFE_MEETING_FOLDER_NAME = '반딧불_홈페이지_카페이전사진_회의';
+const CAFE_MEETING_PROP_KEY = 'CAFE_MEETING_IMPORT_DONE_V1';
+
+const CAFE_MEETING_POSTS = [
+  {"key":"kVAF/19","board":"운영위원회","title":"2023년 3차 운영위원회의 개최복","date":"2023-11-13 12:05","blocks":["1. 일시: 2023.09.14(10:30~11:30)","","2. 장소: 반딧불단기보호센터(천안시 서북구 신당새터1길 72)","","3. 참석: 9명 중 5명 참석","","4. 안건","- 2023년 상반히 프로그램 결과 보고","- 2023년 하반기 프로그램 계획 보고","- 2023년 1월~8월 세입.세출 결산 보고","- 2023년 1월~8월 후원금 수입 및 지출 보고","- 2023년 2차 추가경정예산(안) 심의","- 시설 이전 건축지 현황 보고","- 기타안건","","img:dc12e8db831d1fbc19b9ebfe646edb62c62fa39b"]},
+  {"key":"kVAH/14","board":"인권지킴이단회의","title":"2023년 반딧불단기보호센터 4분기 인권지킴이단회의 및 인권상황점검","date":"2023-12-12 21:41","blocks":["▣ 2023. 4분기 반딧불 인권지킴이단 회의 및 인권상황점검 진행","","1. 일 시 : 2023. 12. 07. (목). 10:30","2. 장 소 : 반딧불단기보호센터","3. 단 원 : - 외부단원 : 황관익(단장). 노규환위원. 김태욱위원.","- 내부단원 : 이순옥(간사). 임희찬위원","","img:9626d09a8c71379f34767ccb3226af83fd95bcce","img:bd84315824c4d649604d9ad80926c0c45bf19c48","img:e45cca4f466a3616d5918ae44dd192fedd898cd4","img:56fb252e8ef23fe339b576409dec8ad948f91778"]},
+  {"key":"kVAH/15","board":"인권지킴이단회의","title":"2024년 인권 지킴이단 1분기 회의","date":"2024-03-20 14:12","blocks":["img:b6e6df922b3b76a82b2d5b965b3bc0ae7f0e37d7","img:8302dbdbf9c71519236cfa4dd16bc13ef27286eb","회의 중....입니다.","img:f2b5ed53a0f148a0799daac040c2c965139deea0","신규 단원이신 김준환 위원님 ( 반딧불단기보호센터가 현재 있는 곳에 이장님을 하고 계십니다.","img:ff7d5533b302d3c951e832d531c52717430c5e46","신규 인권지킴이단 단원 이신 송경호님.","24년 1/4분기 인권지킴이단 회의를 3월 14일 목요일에 진행 하였습니다. 간사님이신 이순옥 단원은 임기 만료 이시구요.","개인 사정도 있고 해서 새로운 분들이 위촉 되었습니다."]},
+  {"key":"kVAF/20","board":"운영위원회","title":"2023년 4차 운영위원회의 개최","date":"2024-05-13 11:53","blocks":["1. 일시: 2023.12.06(10:30~11:30)","","2. 장소: 반딧불단기보호센터(천안시 서북구 직산읍 군서2길 49)","","3. 참석: 9명 중 9명 참석","","4. 안건","- 9월~12월 프로그램 실시 현황 보고","- 2023년 1월~11월 세입세출 정산 및 후원금 내역 보고","- 2023년 사업 자체평가 결과 보고","- 2023년 3차 추가경정예산(안) 심의","- 2024년 본예산(안) 심의","- 2024년 연간사업계획 보고","- 기타안건","img:673a9e7c38dba459fd9f32b3f8484eae6d3e2970"]},
+  {"key":"kVAF/21","board":"운영위원회","title":"2024년 1차 운영위원회의 개최","date":"2024-05-13 14:45","blocks":["1. 일시: 2024.03.18(11:00~12:00)","","2. 장소: 반딧불단기보호센터(천안시 서북구 직산읍 군서2길 49)","","3. 참석: 9명 중 8명 참석","","4. 안건","- 소식지 제작 보고","- 2023년 사업결과 보고","- 2024년 주요사업계획 보고","- 2023년 세입세출 결산보고","- 2023년 후원금 수입지출 보고","- 운영규정 개정안 보고","img:4a7b7a41a5f1cb934de101648a182e8a732a5a42"]},
+  {"key":"kVAF/22","board":"운영위원회","title":"2024년 2차 운영위원회의 개최","date":"2024-07-09 13:31","blocks":["1. 일시: 2024.06.27.(10:30~11:30)","","2. 장소: 반딧불단기보호센터(천안시 서북구 직산읍 군서2길 49)","","3. 참석: 9명 중 7명 참석","","4. 안건","- 2024년 상반기 프로그램 결과 보고","- 2024년 하반기 프로그램 계획 보고","- 2024년 1월~5월 세입,세출 결산보고","- 2024년 1월~5월 후원금 수입,지출 보고","- 2024년 1차 추가경정예산(안) 심의","- 기타 안건 보고","img:f606a3a20ce9d9540c8322dadf3dc01706501d90"]},
+  {"key":"kJX5/36","board":"회의","title":"2024.03.11. 자체평가회의","date":"2024-07-09 13:37","blocks":["2025년도 장애인거주시설 평가에 대비하여 2023년 사업에 대한 자체평가 회의를 실시하였습니다.","","- 일 시: 2024.3.11.(9:30-11:00)","- 장 소: 반딧불단기보호센터 회의실","- 평가년도: 2023년도","- 평가내용: 시설 및 환경 / 재정 및 조직운영 / 프로그램 및 서비스 / 이용자의 권리 / 시설 운영 전반","img:dc8306f139721b73c00de9884f037ab88f150ff8"]},
+  {"key":"kJX5/37","board":"회의","title":"2024.07.08. 2024년도 상반기 사업평가회의 실시","date":"2024-07-09 13:38","blocks":["- 일 시: 2024.07.08.(9:20-10:30)","- 장 소: 반딧불단기보호센터 회의실","- 평가년도: 2024년도 상반기","- 평가내용","img:e7fe86d896f8d4b9878d9fd4740b5a32078503cc",": 2024년도 상반기 사업계획 전반(예산,프로그램 등)"]},
+  {"key":"kVAH/16","board":"인권지킴이단회의","title":"2분기 인권지킴이단 회의","date":"2024-07-10 14:20","blocks":["img:4bda2640427faabc1ff0c5520d54f719b1b94afa","img:d5a8ab50ef1f87002bce31bc8cf678dba489a590","6월 2/4분기 인권지킴이단 회의가 진행 되었습니다. 매달 두번씩 갈비탕을 후원해주시는 곽만근 갈비탕에서 6월 둘째주 오전에 진행 하였습니다.","6분의 지킴이 단원 모두 참석 하셔서 회의가 잘 진행 되었습니다.","매번 인권 점검을 진행 해 주시는 단장님... 새로운 시선에서 반딧불을 지켜주시는 노규환 교수님.. 감사 합니다.","이용인 보호자 이신 송경호 위원님과, 지역사회 주민이신 김준환 위원님도 감사합니다.","개인 일정이 있으신데도 반딧불 이용인들의 인권을 위해 항상 신경 써주시고 계십니다. 지나가다 방문도 해주시고, 매월 점검차 들러 주시기도 하셔서 반딧불 직원으로 행복합니다.","","직원들이 행복해야 반딧불 이용인 들도 행복 하다는 원장님의 말씀대로 이용인들이 편안하고 행복하게 지내 직원들도 편안하고 행복하게 지내는 듯 합니다. ( 직원들 모두 그렇게 생각하겠죠?)","","* 회의 안건은","1.이용인과 직원 인권교육 진행 상황","2.매월 정기 인권점검 상황","3. 기타 - 이용인 성교육 안건이 있었습니다. ( 성인권 교육이 진행 되었지만 ... 상황극등의 더 좋은교육(노규환 교수님 추천)이 있어으면 했는데.. 상황이 ( 협의중 일정이 맞지 않아)여의치 않아 올해는 진행 하기 어려워 졌습니다. 하지만 계속해서 반딧불 이용인들에게 적합한 교육을 찾을 예정 입니다... )"]},
+  {"key":"kVAF/23","board":"운영위원회","title":"2024년 3차 운영위원회의 개최","date":"2024-09-19 12:05","blocks":["1. 일시: 2024.09.11.(10:30~11:30)","","2. 장소: 반딧불단기보호센터(천안시 서북구 직산읍 군서2길 49)","","3. 참석: 9명 중 7명 참석","","4. 안건","- 2024년 7월~8월 프로그램 결과 보고","- 2024년 9월~12월 프로그램 계획 보고","- 2024년 1월~8월 세입·세출 결산보고","- 2024년 1월~8월 후원금 수입 및 지출 보고","- 기타 안건 보고","","img:3381275cd1b422d49fa500acb2ed09df54493c3b"]},
+  {"key":"kVAH/17","board":"인권지킴이단회의","title":"3분기 인권지킴이단 회의","date":"2024-11-12 17:10","blocks":["img:35b5b6099632c47b2df720863763ef334bb071ff","img:1fb0d6f67415a5a9db2add84b407fbac85adc3c2","- 인권지킴이단 3분기 회의 입니다.","- 9월 4일 두정동 모 음식점에서 진행 되었습니다. .. 외부 단원 2명과 내부 단원 2명으로 회의 진행 하였습니다. - 회의 내용 : 3분기 인권상황 점검 내용 중간 보고","인권 교육 상황 보고","인권점검과 점검 장소에 대해 논의 되었습니다.","* 내부 상황점검 이외에 외부로 가서 인권점검 하는 내용을 논의 하였습니다.","- 차를 마시거나 식사후에 상황점검을 하는 방법은 단원들 모두 반가워 하셔서 결정되었습니다."]},
+  {"key":"kVAF/24","board":"운영위원회","title":"2024년 4차 운영위원회의 개최","date":"2024-12-24 16:49","blocks":["1. 일시: 2024.12.11.(10:30~11:30)","","2. 장소: 반딧불단기보호센터(천안시 서북구 직산읍 군서2길 49)","","3. 참석: 9명 중 6명 참석","","4. 안건","- 2024년 9월~11월 프로그램 결과 보고","- 2024년 1월~11월 세입·세출 정산 및 후원금 내역 보고","- 2024년 사업 자체평가 결과 보고","- 2024년 2차 추가경정예산(안) 심의","- 2025년 본예산(안) 심의","- 2025년 연간사업계획 보고","- 기타 안건 보고","img:f404dde2e9ab3003f790887ee380dfedf65b097a"]},
+  {"key":"kVAF/25","board":"운영위원회","title":"2025년 1분기 운영위원회의 개최","date":"2025-03-18 10:53","blocks":["1. 일시: 2025.03.13.(10:30~11:30)","","2. 장소: 반딧불단기보호센터(천안시 서북구 직산읍 군서2길 49)","","3. 참석: 9명 중 8명 참석","","4. 안건","- 소식지 제작 보고","- 2024년 사업결과 보고","- 2025년 주요사업계획 보고","- 2024년 세입세출 결산보고","- 2024년 후원금 수입지출 보고","- 운영규정 개정안 보고"]},
+  {"key":"kVAH/18","board":"인권지킴이단회의","title":"25년 반딧불인권지킴이단. 1분기 정기 회의","date":"2025-03-28 01:34","blocks":["img:f543343e9f3e6e84f54fb5820e0a695efcb59eae","img:6f86366294d94f626c910c81ec6459a14777508e","img:bba77e53422559220ea1b555d16c8346adcdff37","img:e9e9b22d5e25cb1107c939fd390388d763a306ea","","반딧불인권지킴이단 정기 회의가 3월 세번째 주에 실시하였습니다. 인권 침해 사항 없어 즐거운 분위기에서 실시되었습니다.","매달 인권점검이 이용인 직원모두 실시됩니다.","인권침해 없는 반딧불은 언제가 즐겁습니다."]},
+  {"key":"kVAH/19","board":"인권지킴이단회의","title":"25년 2분기 인권지킴이단 회의","date":"2025-07-09 14:55","blocks":["반딧불 인권지킴이단 입니다.","2/4분기 인권지킴이단 회의를 6월 25일 수요일에 진행하였습니다.","반딧불단기보호센터 인권은 잘 지켜지고 있어 회의는 빠르게 진행 되었습니다.","img:6d77d8e8f92aa5e546285e2ef16c3b13e42f71ea","img:22a276e7c6d75359e22d47bef821e19363c8d691","img:aa69b7d2000302c445e3acfb93297be78530ca8a","img:a36bf0506770b0380958829ea0f27736247e504e","인권지킴이단 회의 전에 인권상황점검도 실시하였습니다."]},
+  {"key":"kVAH/20","board":"인권지킴이단회의","title":"3분기 인권지킴이단 정기 회의","date":"2025-12-17 11:23","blocks":["img:31bc97537d30388c8eb7755b5002e6cd1f6eb39f","img:647eb503026af168bb12532a616c49dce7a4baeb","인권지킴이단 25년 3 분기 정기회의 진행 하였습니다. 너무 늦게 올렸네요.. 그래도 9월에 진행 하였습니다... ^^","","물론 인권점검은 매달 진행 되었구요."]},
+  {"key":"kVAH/21","board":"인권지킴이단회의","title":"26년 1분기 인권지킴이단 정기 회의","date":"2026-03-25 14:10","blocks":["3월 인권지킴이단 정기 회의를 개최하고 위촉장을 전달 하였습니다.","1월, 2월 , 3월 종사자 , 이용인 인권점검도 실시하였습니다. ^^","img:275a4e5a2f8cfbac5b367dd83197a4ab1da166f5","2월 종사자 인권점검","img:724ac4164d8a0aff828d97905f564cf1e7d0e987","2월 이용인 인권점검","img:5c1eca8ad0bd1ef6841c15e0993d36e7da5d3509","26년 1분기 인권지킴이단 위촉장 수여"]}
+];
+
+function importCafeMeetingPosts() {
+  const started = Date.now();
+  const lock = LockService.getScriptLock();
+  if (!lock.tryLock(5000)) {
+    Logger.log('이미 다른 가져오기 작업이 실행 중입니다. 잠시 후 다시 시도하세요.');
+    return;
+  }
+  try {
+    ScriptApp.getProjectTriggers().forEach(function (t) {
+      if (t.getHandlerFunction() === 'importCafeMeetingPosts') ScriptApp.deleteTrigger(t);
+    });
+    const props = PropertiesService.getScriptProperties();
+    const done = JSON.parse(props.getProperty(CAFE_MEETING_PROP_KEY) || '{}');
+    const sheet = getStorySheet_();
+    const folder = getOrCreateDriveFolder_(CAFE_MEETING_FOLDER_NAME);
+    let added = 0, skipped = 0, failedImages = 0;
+
+    for (let i = 0; i < CAFE_MEETING_POSTS.length; i++) {
+      const post = CAFE_MEETING_POSTS[i];
+      if (done[post.key]) { skipped++; continue; }
+      if (Date.now() - started > CAFE_IMPORT_TIME_LIMIT_MS) {
+        ScriptApp.newTrigger('importCafeMeetingPosts').timeBased().after(60 * 1000).create();
+        Logger.log('시간이 다 되어 여기서 멈춥니다. 1분 뒤 자동으로 이어서 실행됩니다. (이번에 ' + added + '개 추가)');
+        invalidateCache_(CACHE_KEY_STORIES);
+        return;
+      }
+
+      const parts = [];
+      let imgNo = 0;
+      post.blocks.forEach(function (block) {
+        if (block.indexOf('img:') === 0) {
+          imgNo++;
+          try {
+            const res = UrlFetchApp.fetch(CAFE_IMAGE_URL_PREFIX + block.substring(4), { muteHttpExceptions: true });
+            if (res.getResponseCode() !== 200) throw new Error('HTTP ' + res.getResponseCode());
+            const file = folder.createFile(res.getBlob().setName('cafe_' + post.key.replace('/', '_') + '_' + imgNo + '.jpg'));
+            file.setSharing(DriveApp.Access.ANYONE_WITH_LINK, DriveApp.Permission.VIEW);
+            parts.push('<img src="https://drive.google.com/thumbnail?id=' + file.getId() + '&amp;sz=w1200" class="content-resizable-img">');
+          } catch (err) {
+            failedImages++;
+            Logger.log('사진 실패: ' + post.title + ' #' + imgNo + ' - ' + err);
+          }
+        } else if (block === '') {
+          parts.push('<div><br></div>');
+        } else {
+          parts.push('<div>' + escapeHtmlForImport_(block) + '</div>');
+        }
+      });
+
+      const dateOnly = post.date.substring(0, 10);
+      sheet.appendRow(buildRowByHeaderNames_(sheet, STORY_HEADERS, {
+        ID: Utilities.getUuid(),
+        Category: CAFE_MEETING_CATEGORY,
+        Title: post.title,
+        Content: parts.join(''),
+        Date: dateOnly,
+        ThumbnailURL: '',
+        ThumbnailFileId: '',
+        FileURL: '',
+        FileName: '',
+        Views: 0,
+        AttachmentsJSON: '[]',
+        CreatedAt: Utilities.parseDate(post.date, 'Asia/Seoul', 'yyyy-MM-dd HH:mm'),
+        PdfFileId: ''
+      }));
+      done[post.key] = true;
+      props.setProperty(CAFE_MEETING_PROP_KEY, JSON.stringify(done));
+      added++;
+      Logger.log('추가: [' + post.board + '] ' + post.title + ' (' + dateOnly + ')');
+    }
+    invalidateCache_(CACHE_KEY_STORIES);
+    Logger.log('완료! 이번에 ' + added + '개 추가, 이미 있던 글 ' + skipped + '개 건너뜀, 실패한 사진 ' + failedImages + '장');
+  } finally {
+    lock.releaseLock();
+  }
+}
+
+function cafeMeetingImportStatus() {
+  const done = JSON.parse(PropertiesService.getScriptProperties().getProperty(CAFE_MEETING_PROP_KEY) || '{}');
+  const remaining = CAFE_MEETING_POSTS.filter(function (p) { return !done[p.key]; });
+  Logger.log('전체 ' + CAFE_MEETING_POSTS.length + '개 중 ' + (CAFE_MEETING_POSTS.length - remaining.length) + '개 완료, ' + remaining.length + '개 남음');
+}
+
+function escapeHtmlForImport_(s) {
+  return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+}
