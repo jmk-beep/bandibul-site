@@ -1596,7 +1596,8 @@ html {
     padding: 2rem 2.2rem;
     box-shadow: var(--shadow-sm);
 }
-.story-detail-back-link {
+.story-detail-back-link,
+.ann-detail-back-link {
     display: inline-flex;
     align-items: center;
     gap: 0.4rem;
