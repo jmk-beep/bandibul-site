@@ -363,9 +363,11 @@ const ANN_TABS = {
     '활동계획': 'announcements-activity-tab'
 };
 let ANN_BY_ID = {};
+let ANN_GROUPS = {};
 
 function renderAnnouncements(groups) {
     ANN_BY_ID = {};
+    ANN_GROUPS = groups || {};
     const staff = !!window.BDB_STAFF;
     Object.keys(ANN_TABS).forEach(function (cat) {
         const items = (groups && groups[cat]) || [];
@@ -393,6 +395,7 @@ function renderAnnouncements(groups) {
             + '</tr></thead><tbody>' + rows + '</tbody></table></div>'
             + '<div class="pagination-controls" data-page-size="10" data-item-selector=".announcement-item"></div>';
     });
+    syncAnnDetailAfterRender();
 }
 
 function openAnnouncementModal(id) {
@@ -439,6 +442,135 @@ function closeAnnouncementModal() {
         if (e.key === 'Escape' && modal.classList.contains('active')) closeAnnouncementModal();
     });
 })();
+
+// ---------------------------------------------------------------------------
+// 공지사항·채용공고 상세보기 (반딧불이야기처럼 한 화면 안에서 열기, 주소: ?notice=글ID)
+// 식단표·활동계획은 기존처럼 팝업으로 엽니다.
+// ---------------------------------------------------------------------------
+const ANN_PAGE_CATEGORIES = ['공지사항', '채용공고'];
+let annDetailPrevTabId = 'announcements-all-tab';
+let PENDING_ANN_ID = null;   // 글 주소로 바로 들어왔는데 아직 목록을 못 받은 경우
+
+function openAnnouncement(id) {
+    const a = ANN_BY_ID[id];
+    if (!a) return;
+    if (ANN_PAGE_CATEGORIES.indexOf(a.category) === -1) {
+        openAnnouncementModal(id);
+        return;
+    }
+    const active = document.querySelector('#announcements .intro-content.active');
+    if (active && active.id !== 'announcement-detail-view') annDetailPrevTabId = active.id;
+    openAnnDetail(id);
+}
+
+function annDetailHtml(a) {
+    const list = ANN_GROUPS[a.category] || [];
+    const idx = list.findIndex(function (x) { return x.id === a.id; });
+    const newer = idx > 0 ? list[idx - 1] : null;               // 목록에서 위쪽 글
+    const older = idx >= 0 && idx < list.length - 1 ? list[idx + 1] : null;
+    const others = list.filter(function (x) { return x.id !== a.id; }).slice(0, 6);
+
+    let h = '<div class="story-page-wrap"><div class="story-main">'
+        + '<a href="#announcements" class="ann-detail-back-link"><i class="fas fa-arrow-left"></i> 알림마당 목록으로</a>'
+        + '<span class="story-category-badge">' + esc(a.category) + '</span>'
+        + '<h1 class="story-title">' + (a.pinned ? '<span class="badge-important">중요</span> ' : '') + esc(a.title) + '</h1>'
+        + '<div class="story-meta"><span><i class="fas fa-calendar"></i> ' + esc(a.date) + '</span></div>';
+
+    h += '<div class="story-content-body">'
+        + (a.content ? String(a.content).replace(/\n/g, '<br>') : '<p>내용이 준비되지 않았습니다.</p>')
+        + '</div>';
+
+    if (a.fileUrl) {
+        if (a.fileName && /\.(jpg|jpeg|png|gif|webp)$/i.test(a.fileName)) {
+            const m = a.fileUrl.match(/[?&]id=([^&]+)/);
+            const src = m ? 'https://drive.google.com/thumbnail?id=' + m[1] + '&sz=w1000' : a.fileUrl;
+            h += '<div class="story-content-body" style="margin-top:1.5rem;"><img src="' + esc(src) + '" alt="' + esc(a.fileName) + '"></div>';
+        }
+        h += '<div class="modal-attachment" style="margin-top:2rem; flex-direction:column; align-items:stretch; gap:0.7rem;">'
+            + '<div style="display:flex; align-items:center; gap:0.6rem;"><i class="fas fa-paperclip"></i>'
+            + '<a href="' + esc(a.fileUrl) + '" target="_blank" rel="noopener"><span>' + esc(a.fileName || '첨부파일 다운로드') + '</span> <i class="fas fa-download"></i></a></div>'
+            + '</div>';
+    }
+
+    if (window.BDB_STAFF) {
+        h += '<div class="story-actions-row"><button class="btn-admin" data-staff-action="editAnn" data-id="' + esc(a.id) + '"><i class="fas fa-pen"></i> 이 글 수정</button>'
+            + '<button class="btn-admin" data-staff-action="delAnn" data-id="' + esc(a.id) + '" style="background-color: var(--secondary-color);"><i class="fas fa-trash"></i> 이 글 삭제</button></div>';
+    }
+
+    h += '<div class="story-prev-next">';
+    if (older) {
+        h += '<a href="?notice=' + encodeURIComponent(older.id) + '" class="ann-detail-nav-link" data-ann-id="' + esc(older.id) + '">'
+            + '<span class="pn-label">이전글</span> <span>' + esc(older.title) + '</span></a>';
+    }
+    if (newer) {
+        h += '<a href="?notice=' + encodeURIComponent(newer.id) + '" class="ann-detail-nav-link" data-ann-id="' + esc(newer.id) + '">'
+            + '<span class="pn-label">다음글</span> <span>' + esc(newer.title) + '</span></a>';
+    }
+    h += '</div></div>';
+
+    h += '<div class="story-sidebar"><h4>' + esc(a.category) + ' 다른 글</h4>';
+    if (others.length === 0) {
+        h += '<p style="color:var(--text-muted); font-size:0.9rem;">다른 글이 없습니다.</p>';
+    } else {
+        h += others.map(function (x) {
+            return '<div class="story-sidebar-item ann-detail-nav-link" data-ann-id="' + esc(x.id) + '">'
+                + '<div style="width:56px;height:56px;border-radius:6px;background-color:var(--bg-color);display:flex;align-items:center;justify-content:center;color:var(--primary-color);flex-shrink:0;"><i class="fas ' + (x.category === '채용공고' ? 'fa-user-plus' : 'fa-bullhorn') + '"></i></div>'
+                + '<div><div class="ss-title">' + esc(x.title) + '</div><div class="ss-date">' + esc(x.date) + '</div></div></div>';
+        }).join('');
+    }
+    h += '</div></div>';
+    return h;
+}
+
+function openAnnDetail(id, opts) {
+    opts = opts || {};
+    const a = ANN_BY_ID[id];
+    if (!a) return;
+    const panel = $('announcement-detail-view');
+    panel.dataset.annId = id;
+    panel.innerHTML = annDetailHtml(a);
+    activateTab('announcements', 'announcement-detail-view', !opts.noScroll);
+
+    const url = location.pathname + '?notice=' + encodeURIComponent(id);
+    if (opts.replace) {
+        history.replaceState({ bdbAnnId: id, deep: !!(history.state && history.state.deep) }, '', url);
+    } else if (!opts.noHistory) {
+        history.pushState({ bdbAnnId: id }, '', url);
+    }
+}
+
+function closeAnnDetail() {
+    const prev = $(annDetailPrevTabId) ? annDetailPrevTabId : 'announcements-all-tab';
+    activateTab('announcements', prev, false);
+}
+
+// 목록을 새로 받으면(글 수정·삭제 후 포함) 열려 있던 상세 화면도 최신 내용으로 맞춥니다.
+function syncAnnDetailAfterRender() {
+    if (PENDING_ANN_ID && ANN_BY_ID[PENDING_ANN_ID]) {
+        const id = PENDING_ANN_ID;
+        PENDING_ANN_ID = null;
+        openAnnDetail(id, { noHistory: true });
+        return;
+    }
+    const panel = $('announcement-detail-view');
+    if (!panel || !panel.classList.contains('active')) return;
+    const id = panel.dataset.annId;
+    if (ANN_BY_ID[id]) {
+        panel.innerHTML = annDetailHtml(ANN_BY_ID[id]);
+    } else {
+        history.replaceState({}, '', location.pathname + '#announcements');
+        closeAnnDetail();
+    }
+}
+
+window.addEventListener('popstate', function (e) {
+    const st = e.state;
+    if (st && st.bdbAnnId) {
+        openAnnDetail(st.bdbAnnId, { noHistory: true, noScroll: true });
+    } else if ($('announcement-detail-view') && $('announcement-detail-view').classList.contains('active')) {
+        closeAnnDetail();
+    }
+});
 
 // ---------------------------------------------------------------------------
 // 반딧불이야기 렌더링
@@ -892,6 +1024,28 @@ document.addEventListener('click', function (e) {
         return;
     }
 
+    const annBack = t.closest('.ann-detail-back-link');
+    if (annBack) {
+        e.preventDefault();
+        const st = history.state;
+        if (st && st.deep) {
+            history.replaceState({}, '', location.pathname + '#announcements');
+            closeAnnDetail();
+        } else if (st && st.bdbAnnId) {
+            history.back();
+        } else {
+            closeAnnDetail();
+        }
+        return;
+    }
+
+    const navAnn = t.closest('.ann-detail-nav-link');
+    if (navAnn) {
+        e.preventDefault();
+        if (navAnn.dataset.annId) openAnnDetail(navAnn.dataset.annId, { replace: true });
+        return;
+    }
+
     const navStory = t.closest('.story-detail-nav-link');
     if (navStory) {
         e.preventDefault();
@@ -908,7 +1062,7 @@ document.addEventListener('click', function (e) {
     const annRow = t.closest('.announcement-item');
     if (annRow) {
         if (t.closest('.file-link')) return;
-        openAnnouncementModal(annRow.dataset.id);
+        openAnnouncement(annRow.dataset.id);
     }
 });
 
@@ -923,7 +1077,13 @@ document.addEventListener('DOMContentLoaded', function () {
 
     // 글 주소(?story=ID)로 바로 들어온 경우
     const storyId = new URLSearchParams(location.search).get('story');
-    if (storyId) {
+    const noticeId = new URLSearchParams(location.search).get('notice');
+    if (noticeId) {
+        // 목록을 받은 뒤(renderAnnouncements) 열립니다.
+        history.replaceState({ bdbAnnId: noticeId, deep: true }, '', location.href);
+        PENDING_ANN_ID = noticeId;
+        if (ANN_BY_ID[noticeId]) syncAnnDetailAfterRender();
+    } else if (storyId) {
         history.replaceState({ bdbStoryId: storyId, deep: true }, '', location.href);
         openStoryDetail(storyId, { noHistory: true });
     } else if (location.hash) {
